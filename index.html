@@ -1,0 +1,2373 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>DOUBLE GOOD KITCHEN — Burger, Lavash, Pitsa & Hot-Dog</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* =====================================================================
+       DESIGN TOKENS & ATMOSPHERE
+       Warm golden-yellow tabletop, cobalt blue (#1d4ed8), crimson red (#ef4444),
+       dark charcoal (#111827), and warm cream accents.
+       ===================================================================== */
+    :root {
+      --bg-gold: #F4C430;
+      --brand-blue: #1d4ed8;
+      --brand-navy: #111827;
+      --brand-red: #ef4444;
+      --cream-card: #FFFDF7;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-gold);
+      background-image:
+        radial-gradient(circle at 50% 38%, rgba(255, 250, 224, 0.78) 0%, rgba(244, 196, 48, 0.15) 62%, rgba(196, 138, 12, 0.35) 100%),
+        repeating-linear-gradient(90deg, rgba(17, 24, 39, 0.03) 0px, rgba(17, 24, 39, 0.03) 2px, transparent 2px, transparent 24px);
+      color: #111827;
+      min-height: 100vh;
+      overflow-x: hidden;
+      touch-action: pan-y;
+    }
+
+    .font-display {
+      font-family: 'Oswald', sans-serif;
+      letter-spacing: 0.02em;
+    }
+
+    .font-mono-receipt {
+      font-family: 'Space Mono', monospace;
+    }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: rgba(17, 24, 39, 0.06); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb { background: rgba(29, 78, 216, 0.4); border-radius: 99px; }
+
+    /* Draggable Ingredient & Side Trays */
+    .food-tray {
+      background: linear-gradient(180deg, #FFFDF8 0%, #FFF4D6 100%);
+      border: 2px solid #E5C16C;
+      border-radius: 16px;
+      box-shadow:
+        0 5px 0 #C89935,
+        0 10px 18px rgba(17, 24, 39, 0.14),
+        inset 0 2px 6px rgba(255, 255, 255, 0.92);
+      cursor: grab;
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+      touch-action: none;
+    }
+    .food-tray:hover {
+      transform: translateY(-3px) scale(1.02);
+      border-color: var(--brand-blue);
+      box-shadow:
+        0 7px 0 var(--brand-blue),
+        0 14px 22px rgba(29, 78, 216, 0.2);
+    }
+    .food-tray:active {
+      cursor: grabbing;
+      transform: scale(0.96);
+    }
+
+    /* Chef Recommendation Cards */
+    .chef-pick-card {
+      background: linear-gradient(135deg, #FFFDF9 0%, #FEF3C7 100%);
+      border: 2px solid #F59E0B;
+      border-radius: 14px;
+      box-shadow: 0 4px 0 #D97706, 0 8px 14px rgba(17, 24, 39, 0.1);
+      transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s ease, background 0.18s ease;
+    }
+    .chef-pick-card:hover {
+      transform: translateY(-2px);
+      background: linear-gradient(135deg, #FFFFFF 0%, #FDE68A 100%);
+      border-color: var(--brand-blue);
+      box-shadow: 0 5px 0 var(--brand-blue), 0 10px 18px rgba(29, 78, 216, 0.18);
+    }
+    .chef-pick-card:active {
+      transform: translateY(1px);
+    }
+
+    /* Floating Drag Ghost */
+    #dragGhost {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%) scale(1.16) rotate(-4deg);
+      filter: drop-shadow(0 22px 20px rgba(17, 24, 39, 0.36));
+      will-change: left, top, transform;
+    }
+
+    /* Squeezable / Tiltable Sauce Bottles */
+    .sauce-bottle-slot {
+      position: relative;
+      width: 58px;
+      height: 108px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .sauce-bottle {
+      cursor: grab;
+      touch-action: none;
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s ease;
+      filter: drop-shadow(0 10px 12px rgba(17, 24, 39, 0.26));
+      transform-origin: center center;
+    }
+    .sauce-bottle:hover {
+      transform: translateY(-6px) scale(1.06);
+    }
+    .sauce-bottle.is-dragging-bottle {
+      position: fixed;
+      z-index: 9998;
+      pointer-events: none;
+      transition: none;
+      filter: drop-shadow(0 24px 20px rgba(17, 24, 39, 0.36));
+    }
+
+    /* Thermal Paper Receipt */
+    .receipt-paper {
+      background: #FFFDF9;
+      box-shadow: 0 16px 32px rgba(17, 24, 39, 0.2), 0 2px 6px rgba(0, 0, 0, 0.08);
+      position: relative;
+    }
+    .receipt-paper::before,
+    .receipt-paper::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; height: 8px;
+      background-size: 16px 8px;
+    }
+    .receipt-paper::before {
+      top: -8px;
+      background-image: linear-gradient(135deg, transparent 50%, #FFFDF9 50%), linear-gradient(225deg, transparent 50%, #FFFDF9 50%);
+    }
+    .receipt-paper::after {
+      bottom: -8px;
+      background-image: linear-gradient(45deg, transparent 50%, #FFFDF9 50%), linear-gradient(315deg, transparent 50%, #FFFDF9 50%);
+    }
+
+    /* 3D Isometric Box Container */
+    .takeout-box-wrapper {
+      perspective: 1350px;
+    }
+
+    .takeout-box {
+      position: relative;
+      border-radius: 18px;
+      transform: rotateX(13deg) rotateZ(-1.2deg);
+      transform-style: preserve-3d;
+      transition: all 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* Dish-specific 3D Box Themes */
+    .box-theme-burger {
+      background: linear-gradient(145deg, #2563eb 0%, #1d4ed8 55%, #1e40af 100%);
+      border: 3px solid #111827;
+      box-shadow: 0 28px 44px -12px rgba(17, 24, 39, 0.48), 0 11px 0 #111827, inset 0 2px 10px rgba(255, 255, 255, 0.25);
+    }
+    .box-theme-lavash {
+      background: linear-gradient(145deg, #E8B86B 0%, #C98E3A 100%);
+      border: 3px solid #78350F;
+      box-shadow: 0 28px 44px -12px rgba(17, 24, 39, 0.42), 0 11px 0 #78350F, inset 0 2px 10px rgba(255, 250, 235, 0.65);
+    }
+    .box-theme-pizza {
+      background: linear-gradient(145deg, #FFFBEB 0%, #E7CBA0 100%);
+      border: 3px solid #92400E;
+      box-shadow: 0 28px 44px -12px rgba(17, 24, 39, 0.38), 0 11px 0 #92400E, inset 0 2px 10px rgba(255, 255, 255, 0.85);
+    }
+    .box-theme-hotdog {
+      background: linear-gradient(145deg, #ef4444 0%, #dc2626 55%, #b91c1c 100%);
+      border: 3px solid #111827;
+      box-shadow: 0 28px 44px -12px rgba(17, 24, 39, 0.48), 0 11px 0 #111827, inset 0 2px 10px rgba(255, 255, 255, 0.28);
+    }
+
+    /* Greaseproof Inner Paper Liner */
+    .box-liner {
+      background-color: #FFFDF8;
+      background-image:
+        linear-gradient(45deg, rgba(29, 78, 216, 0.05) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(29, 78, 216, 0.05) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(29, 78, 216, 0.05) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(29, 78, 216, 0.05) 75%);
+      background-size: 26px 26px;
+      background-position: 0 0, 0 13px, 13px -13px, -13px 0px;
+      border: 2px dashed rgba(29, 78, 216, 0.24);
+      box-shadow: inset 0 8px 18px rgba(17, 24, 39, 0.14);
+    }
+
+    /* Drop Zone Highlight */
+    .drop-zone-target {
+      border-radius: 14px;
+      transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .drop-zone-target.drag-over {
+      background-color: rgba(29, 78, 216, 0.12);
+      box-shadow: inset 0 0 0 3px #1d4ed8, 0 0 24px rgba(29, 78, 216, 0.28);
+    }
+    .drop-zone-target.drag-over-side {
+      background-color: rgba(239, 68, 68, 0.12);
+      box-shadow: inset 0 0 0 3px #ef4444, 0 0 24px rgba(239, 68, 68, 0.28);
+    }
+
+    /* Box Flaps & Lid Cover */
+    .box-flap-top {
+      position: absolute;
+      top: -34px; left: 16px; right: 16px; height: 36px;
+      background: linear-gradient(180deg, #FEF3C7 0%, #F5D08A 100%);
+      border: 3px solid #92400E;
+      border-bottom: none;
+      border-radius: 14px 14px 0 0;
+      transform-origin: bottom center;
+      transform: rotateX(-24deg);
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .box-flap-left, .box-flap-right {
+      position: absolute;
+      top: 18px; bottom: 18px; width: 22px;
+      background: linear-gradient(90deg, #D9A14E, #F2C77E);
+      border: 3px solid #92400E;
+      transition: transform 0.65s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .box-flap-left {
+      left: -20px; border-right: none; border-radius: 12px 0 0 12px;
+      transform-origin: right center; transform: rotateY(-30deg);
+    }
+    .box-flap-right {
+      right: -20px; border-left: none; border-radius: 0 12px 12px 0;
+      transform-origin: left center; transform: rotateY(30deg);
+    }
+
+    .box-lid-cover {
+      position: absolute;
+      inset: -3px;
+      background: linear-gradient(145deg, #1d4ed8 0%, #111827 100%);
+      border: 3px solid #111827;
+      border-radius: 18px;
+      z-index: 95;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transform-origin: top center;
+      transform: rotateX(95deg);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+      box-shadow: inset 0 4px 14px rgba(255, 255, 255, 0.22);
+    }
+
+    .takeout-box.is-closed .box-lid-cover {
+      transform: rotateX(0deg);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .takeout-box.is-closed .box-flap-left { transform: rotateY(85deg); }
+    .takeout-box.is-closed .box-flap-right { transform: rotateY(-85deg); }
+    .takeout-box.is-closed { transform: rotateX(7deg) rotateZ(0deg) scale(1.03); }
+
+    /* Layer & Topping Animations */
+    .burger-layer-item {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      transition: bottom 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      animation: layerSpringDrop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      cursor: grab;
+      touch-action: none;
+    }
+    .burger-layer-item:hover {
+      filter: brightness(1.07) drop-shadow(0 0 8px rgba(29, 78, 216, 0.55));
+    }
+
+    @keyframes layerSpringDrop {
+      0% { opacity: 0; transform: translateX(-50%) translateY(-90px) scale(1.15) rotate(-3deg); }
+      65% { opacity: 1; transform: translateX(-50%) translateY(4px) scale(0.96) rotate(1deg); }
+      100% { opacity: 1; transform: translateX(-50%) translateY(0px) scale(1) rotate(0deg); }
+    }
+
+    .scattered-item {
+      position: absolute;
+      animation: popInSpot 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      cursor: grab;
+      touch-action: none;
+    }
+    .scattered-item:hover {
+      filter: brightness(1.08) drop-shadow(0 0 7px rgba(239, 68, 68, 0.55));
+    }
+
+    @keyframes popInSpot {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(1.42) rotate(-14deg); }
+      70% { opacity: 1; transform: translate(-50%, -50%) scale(0.92) rotate(3deg); }
+      100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+    }
+
+    .side-in-box {
+      animation: sidePopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      cursor: pointer;
+    }
+    @keyframes sidePopIn {
+      0% { opacity: 0; transform: scale(0.45) translateY(-28px) rotate(-8deg); }
+      100% { opacity: 1; transform: scale(1) translateY(0) rotate(0deg); }
+    }
+
+    .stamp-badge {
+      animation: stampSlam 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) 0.35s both;
+    }
+    @keyframes stampSlam {
+      0% { opacity: 0; transform: scale(2.4) rotate(-18deg); }
+      100% { opacity: 1; transform: scale(1) rotate(-5deg); }
+    }
+
+    /* Sauce Droplet Animation */
+    .pour-droplet {
+      animation: dropFall 0.45s ease-in infinite;
+    }
+    @keyframes dropFall {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0.1; transform: translateY(68px) scale(0.75); }
+    }
+
+    /* Pizza Slicer Cut Line Animation */
+    .pizza-slice-line {
+      stroke-dasharray: 260;
+      stroke-dashoffset: 260;
+      animation: sliceCutDraw 0.45s ease-out forwards;
+    }
+    @keyframes sliceCutDraw {
+      to { stroke-dashoffset: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- FLOATING DRAG GHOST ELEMENT -->
+  <div id="dragGhost" class="hidden"></div>
+
+  <!-- TOP NAVIGATION BAR: 4 DISHES + SIZE SELECTOR (S / M / XL) + CONTROLS -->
+  <header class="w-full max-w-[1520px] mx-auto px-4 sm:px-6 pt-3 pb-2 flex flex-wrap items-center justify-between gap-3 z-40 relative">
+
+    <!-- Brand Logo + 4 Dish Switcher Tabs -->
+    <div class="flex flex-wrap items-center gap-3">
+      <div class="bg-[#111827] text-white px-4 py-2 rounded-2xl border-2 border-[#1d4ed8] shadow-[0_4px_0_#1d4ed8] -rotate-1">
+        <div class="font-display text-2xl sm:text-3xl leading-none tracking-wider font-bold text-[#F4C430]">DOUBLE GOOD</div>
+        <div class="text-[10px] font-extrabold tracking-[0.2em] text-blue-300 uppercase mt-0.5">Kitchen Lab • Interaktiv</div>
+      </div>
+
+      <!-- 4 Interactive Dish Tabs -->
+      <nav id="dishTabsNav" class="flex items-center bg-[#111827]/10 p-1.5 rounded-2xl border border-[#111827]/15 gap-1">
+        <button onclick="switchDish('burger')" data-dish="burger" class="dish-tab px-3 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition flex items-center gap-1.5 bg-[#1d4ed8] text-white shadow">
+          <span>🍔</span> <span>Burger</span>
+        </button>
+        <button onclick="switchDish('lavash')" data-dish="lavash" class="dish-tab px-3 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition flex items-center gap-1.5 text-[#111827]/80 hover:text-[#111827] hover:bg-white/60">
+          <span>🌯</span> <span>Lavash</span>
+        </button>
+        <button onclick="switchDish('pizza')" data-dish="pizza" class="dish-tab px-3 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition flex items-center gap-1.5 text-[#111827]/80 hover:text-[#111827] hover:bg-white/60">
+          <span>🍕</span> <span>Pitsa</span>
+        </button>
+        <button onclick="switchDish('hotdog')" data-dish="hotdog" class="dish-tab px-3 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition flex items-center gap-1.5 text-[#111827]/80 hover:text-[#111827] hover:bg-white/60">
+          <span>🌭</span> <span>Hot-Dog</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Size Selector (S / M / XL) + Utility Buttons -->
+    <div class="flex flex-wrap items-center gap-2">
+      <!-- Portion Size Selector -->
+      <div id="sizeSelector" class="flex items-center bg-[#FFFDF7] p-1 rounded-xl border-2 border-[#111827]/15 shadow-sm" title="Porsiya o‘lchami: narx, vazn va kaloriyaga ta’sir qiladi">
+        <span class="text-[11px] font-extrabold text-[#111827]/70 px-2 hidden sm:inline">O‘lcham:</span>
+        <button onclick="setDishSize('S')" data-size="S" class="size-btn px-2.5 py-1 rounded-lg text-xs font-extrabold transition text-[#111827]/75 hover:bg-amber-100">S</button>
+        <button onclick="setDishSize('M')" data-size="M" class="size-btn px-2.5 py-1 rounded-lg text-xs font-extrabold transition bg-[#111827] text-[#F4C430] shadow">M</button>
+        <button onclick="setDishSize('XL')" data-size="XL" class="size-btn px-2.5 py-1 rounded-lg text-xs font-extrabold transition text-[#111827]/75 hover:bg-amber-100">XL</button>
+      </div>
+
+      <button onclick="undoLastItem()" class="px-3 py-2 rounded-xl bg-[#FFFDF7] hover:bg-white text-[#111827] font-bold text-xs border-2 border-[#111827]/15 shadow-sm active:translate-y-0.5 transition flex items-center gap-1">
+        <span>↩️</span> <span class="hidden sm:inline">Orqaga</span>
+      </button>
+
+      <button onclick="resetCurrentDish()" class="px-3 py-2 rounded-xl bg-[#ef4444] hover:bg-red-600 text-white font-bold text-xs border-2 border-[#111827] shadow-[0_3px_0_#111827] active:translate-y-0.5 transition flex items-center gap-1">
+        <span>🗑️</span> <span>Tozalash</span>
+      </button>
+
+      <button id="soundToggleBtn" onclick="toggleSound()" class="p-2 rounded-xl bg-[#FFFDF7] hover:bg-white text-[#111827] font-bold text-xs border-2 border-[#111827]/15 shadow-sm transition" title="Ovoz effektlari">
+        🔊
+      </button>
+    </div>
+  </header>
+
+  <!-- CHEF TAVSIYASI (READY-MADE RECOMMENDED COMBINATIONS BAR) -->
+  <section class="w-full max-w-[1520px] mx-auto px-4 sm:px-6 pb-2 z-30 relative">
+    <div class="bg-[#FFFDF7]/90 backdrop-blur-sm rounded-2xl px-3.5 py-2.5 border-2 border-[#111827]/15 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-2.5">
+      <div class="flex items-center gap-2 shrink-0">
+        <span class="bg-[#1d4ed8] text-white text-xs font-extrabold px-2.5 py-1 rounded-lg">👨‍🍳 CHEF TAVSIYASI</span>
+        <span class="text-xs font-bold text-[#111827]/80">Bir bosishda tayyor tering va xohlasangiz qo‘lda o‘zgartiring:</span>
+      </div>
+      <div id="chefPicksContainer" class="grid grid-cols-1 sm:grid-cols-3 gap-2 flex-1">
+        <!-- Rendered dynamically per dish -->
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN 3-COLUMN INTERACTIVE WORKSPACE -->
+  <main class="w-full max-w-[1520px] mx-auto px-4 sm:px-6 pb-12 pt-1 grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+
+    <!-- LEFT COLUMN: BASE SELECTOR + DRAGGABLE INGREDIENTS -->
+    <section class="lg:col-span-4 flex flex-col gap-2.5 order-2 lg:order-1">
+      <div class="flex items-end justify-between gap-2 px-1">
+        <div>
+          <h2 class="font-display text-2xl sm:text-3xl font-bold text-[#1d4ed8] uppercase tracking-tight">Masalliqlar</h2>
+          <p id="leftPanelSubtitle" class="text-xs font-semibold text-[#111827]/75">Sichqoncha yoki barmoq bilan ushlab quti ichiga sudrang</p>
+        </div>
+      </div>
+
+      <!-- Base / Bread / Dough Selector Pills -->
+      <div id="baseSelectorBar" class="flex flex-wrap gap-1.5 px-1">
+        <!-- Rendered dynamically per dish -->
+      </div>
+
+      <!-- Draggable Ingredients Grid -->
+      <div id="ingredientsGrid" class="grid grid-cols-2 gap-2.5 max-h-[620px] overflow-y-auto pr-1 pb-2">
+        <!-- Rendered dynamically per dish -->
+      </div>
+    </section>
+
+    <!-- CENTER STAGE: SQUEEZABLE SAUCE BOTTLES + 3D ISOMETRIC BOX + SUMMARY -->
+    <section class="lg:col-span-5 flex flex-col items-center justify-start order-1 lg:order-2 relative">
+
+      <!-- Sauce Hint -->
+      <div class="mb-1.5 inline-flex items-center gap-2 bg-[#111827]/10 px-3.5 py-1 rounded-full text-[11px] font-bold text-[#111827]">
+        <span>💧 Sous idishini ushlab taom ustiga olib keling (~140° egiladi va quyadi)</span>
+      </div>
+
+      <!-- TOP SAUCE BAR: SQUEEZABLE / TILTABLE BOTTLES -->
+      <div id="sauceBottlesShelf" class="relative flex items-end justify-center gap-2 sm:gap-3 h-28 z-30 mb-[-8px] overflow-x-auto max-w-full px-2 pt-4">
+        <!-- Rendered dynamically per dish -->
+      </div>
+
+      <!-- 3D ISOMETRIC TAKEOUT BOX -->
+      <div class="takeout-box-wrapper w-full max-w-[530px] px-3 sm:px-5 pt-7 pb-2">
+        <div id="takeoutBox" class="takeout-box box-theme-burger w-full h-[360px] sm:h-[390px] p-3.5 sm:p-4">
+
+          <!-- Back/Top Flap -->
+          <div class="box-flap-top">
+            <span id="boxFlapTitle" class="font-display text-xs sm:text-sm tracking-[0.22em] font-bold text-[#111827] uppercase">DOUBLE GOOD • FRESH BURGER</span>
+          </div>
+
+          <!-- Left & Right Folded Flaps -->
+          <div class="box-flap-left"></div>
+          <div class="box-flap-right"></div>
+
+          <!-- Closed Lid Overlay -->
+          <div class="box-lid-cover p-6 text-center">
+            <div class="border-4 border-[#F4C430] rounded-2xl px-6 py-4 bg-[#111827]/95 shadow-lg">
+              <div class="font-display text-3xl sm:text-4xl font-bold text-[#F4C430] tracking-wider">DOUBLE GOOD</div>
+              <div id="closedLidDishName" class="text-xs font-extrabold text-white tracking-widest uppercase mt-1">MAXSUS BURGER QADOQLANDI</div>
+              <div id="closedLidNote" class="text-[11px] text-amber-300 mt-1 hidden"></div>
+            </div>
+            <div class="stamp-badge mt-4 bg-[#ef4444] text-white font-display text-lg px-5 py-1.5 rounded-xl border-2 border-white shadow-md uppercase tracking-wider">
+              ✓ BUYURTMA TAYYOR!
+            </div>
+          </div>
+
+          <!-- Inside Greaseproof Liner -->
+          <div class="box-liner w-full h-full rounded-xl relative grid grid-cols-12 p-2">
+
+            <!-- Watermark -->
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.06] overflow-hidden">
+              <span class="font-display text-6xl font-bold text-[#111827] -rotate-12 whitespace-nowrap">DOUBLE GOOD</span>
+            </div>
+
+            <!-- PRIMARY DISH DROP ZONE (Left 8 cols) -->
+            <div id="dishDropZone" class="drop-zone-target col-span-8 relative h-full flex flex-col justify-center items-center overflow-hidden">
+
+              <!-- Live Pouring Stream & Droplets SVG Overlay -->
+              <svg id="livePourStreamSvg" class="absolute inset-0 w-full h-full pointer-events-none z-50 hidden" viewBox="0 0 280 320">
+                <path id="livePourPath" d="" stroke="#ef4444" stroke-width="7" stroke-linecap="round" fill="none" />
+                <circle id="pourDrop1" class="pour-droplet" cx="120" cy="120" r="5" fill="#ef4444" />
+                <circle id="pourDrop2" class="pour-droplet" style="animation-delay:0.15s" cx="132" cy="135" r="4" fill="#ef4444" />
+                <circle id="pourDrop3" class="pour-droplet" style="animation-delay:0.3s" cx="112" cy="145" r="4.5" fill="#ef4444" />
+              </svg>
+
+              <!-- Dynamic Dish Canvas Container -->
+              <div id="dishStageContainer" class="relative w-full h-full flex items-center justify-center">
+                <!-- Burger / Lavash / Pizza / Hot-Dog rendered here -->
+              </div>
+
+              <!-- Item Counter & Size Pill -->
+              <div id="itemCountPill" class="absolute top-1 left-1 bg-[#111827]/90 text-[#F4C430] text-[10px] font-bold px-2.5 py-1 rounded-full shadow pointer-events-none z-40">
+                3 qavat • M
+              </div>
+            </div>
+
+            <!-- Box Center Fold Crease -->
+            <div class="col-span-1 flex justify-center items-center pointer-events-none">
+              <div class="w-[2px] h-[85%] border-r-2 border-dashed border-[#111827]/20"></div>
+            </div>
+
+            <!-- RIGHT DROP ZONE: SIDES COMPARTMENT (3 cols) -->
+            <div id="sidesDropZone" class="drop-zone-target col-span-3 relative h-full flex flex-col items-center justify-center gap-1.5 p-1 overflow-y-auto">
+              <div id="boxSidesContainer" class="w-full h-full flex flex-col items-center justify-center gap-1.5">
+                <!-- Sides dropped here -->
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Remove Item Drop Hint Banner -->
+      <div id="trashDropZone" class="opacity-0 pointer-events-none scale-90 mb-1.5 bg-[#ef4444] text-white px-5 py-1.5 rounded-full font-extrabold text-xs shadow-lg border-2 border-[#111827] flex items-center gap-2 transition-all">
+        <span>🗑️</span> <span>O‘chirish uchun qutidan tashqariga qo‘yib yuboring</span>
+      </div>
+
+      <!-- Active Ingredients Chips + Calorie & Weight Summary -->
+      <div class="w-full max-w-[530px] px-3">
+        <div class="bg-[#FFFDF7]/90 backdrop-blur-sm rounded-2xl p-3 border-2 border-[#111827]/15 shadow-sm">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-1.5 px-1">
+            <span class="text-[11px] font-extrabold text-[#111827]/75 uppercase tracking-wider">Tarkibi (bosib yoki sudrab o‘chiring):</span>
+            <div class="flex items-center gap-2 text-[11px] font-extrabold text-[#1d4ed8]">
+              <span id="weightBadge">~320 g</span>
+              <span>•</span>
+              <span id="caloriesBadge">~540 kkal</span>
+            </div>
+          </div>
+          <div id="activeLayersChips" class="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto">
+            <!-- Chips injected via JS -->
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- RIGHT COLUMN: EXPANDED SIDES ('Qo'shimcha mahsulotlar') + CHEF NOTE + THERMAL RECEIPT -->
+    <section class="lg:col-span-3 flex flex-col gap-3.5 order-3">
+
+      <!-- Expanded Sides Catalog -->
+      <div>
+        <div class="flex items-center justify-between px-1 mb-2">
+          <div>
+            <h2 class="font-display text-2xl font-bold text-[#1d4ed8] uppercase tracking-tight leading-none">Qo‘shimcha mahsulotlar</h2>
+            <p class="text-[11px] font-semibold text-[#111827]/75 mt-0.5">Bosing yoki quti o‘ngiga sudrang</p>
+          </div>
+        </div>
+
+        <div id="sidesGrid" class="grid grid-cols-2 gap-2 max-h-[310px] overflow-y-auto pr-1 pb-1">
+          <!-- Expanded sides populated via JS -->
+        </div>
+      </div>
+
+      <!-- Chefga izoh (Special Note Input) -->
+      <div class="px-1">
+        <label for="chefNoteInput" class="block text-[11px] font-extrabold text-[#111827] uppercase tracking-wider mb-1">
+          ✍️ Chefga izoh
+        </label>
+        <input
+          id="chefNoteInput"
+          type="text"
+          oninput="updateChefNote(this.value)"
+          placeholder="Masalan: Achchiqroq bo‘lsin, piyozsiz..."
+          class="w-full px-3 py-2 rounded-xl bg-[#FFFDF7] border-2 border-[#111827]/20 focus:border-[#1d4ed8] focus:outline-none text-xs font-semibold text-[#111827] shadow-inner"
+        />
+      </div>
+
+      <!-- LIVE THERMAL PAPER RECEIPT -->
+      <div class="px-1">
+        <div class="receipt-paper rounded-sm p-4 text-[#111827] font-mono-receipt">
+          <div class="text-center border-b-2 border-dashed border-zinc-300 pb-2 mb-2">
+            <div class="font-display text-xl font-bold tracking-wider text-[#1d4ed8]">DOUBLE GOOD</div>
+            <div id="receiptDishSubtitle" class="text-[10px] text-zinc-500">BURGER LAB • TOSHKENT</div>
+            <div id="receiptDate" class="text-[10px] text-zinc-400 mt-0.5"></div>
+          </div>
+
+          <div id="receiptItemsList" class="space-y-1.5 text-xs max-h-44 overflow-y-auto pr-1">
+            <!-- Dynamic line items -->
+          </div>
+
+          <div id="receiptNoteBox" class="mt-2 pt-2 border-t border-dotted border-zinc-300 text-[11px] text-amber-900 bg-amber-50 px-2 py-1 rounded hidden">
+            <span class="font-bold">Izoh:</span> <span id="receiptNoteText"></span>
+          </div>
+
+          <div class="border-t-2 border-dashed border-zinc-300 mt-2.5 pt-2 space-y-1 text-xs">
+            <div class="flex justify-between text-zinc-500">
+              <span>Qadoqlash (3D Box):</span>
+              <span>BEPUL</span>
+            </div>
+            <div class="flex justify-between items-center text-base font-bold text-[#111827] pt-1">
+              <span>JAMI:</span>
+              <span id="receiptTotal" class="text-[#1d4ed8]">0 so'm</span>
+            </div>
+          </div>
+
+          <button id="checkoutBtn" onclick="openCheckoutModal()" class="mt-3.5 w-full py-3 px-4 rounded-xl bg-[#1d4ed8] hover:bg-blue-700 active:translate-y-0.5 text-white font-sans font-extrabold text-sm tracking-wide shadow-[0_4px_0_#111827] transition flex items-center justify-center gap-2">
+            <span>BUYURTMA BERISH</span>
+            <span>→</span>
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- CHECKOUT CONFIRMATION MODAL -->
+  <div id="checkoutModal" class="fixed inset-0 z-50 bg-black/55 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-[#FFFDF9] rounded-3xl max-w-md w-full p-6 border-4 border-[#1d4ed8] shadow-2xl text-center relative">
+      <div id="modalDishEmoji" class="w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-3 border-2 border-amber-300">
+        🍔
+      </div>
+      <h3 class="font-display text-3xl font-bold text-[#1d4ed8] uppercase">Mazali taom. Yo‘lga chiqmoqda!</h3>
+      <p id="modalActionDesc" class="text-sm text-zinc-600 mt-1">Buyurtmani tasdiqlang — ustki bulochka tushadi va 3D quti yopiladi.</p>
+
+      <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-3.5 my-4 text-left font-mono-receipt text-xs space-y-1.5">
+        <div class="flex justify-between font-bold text-amber-950">
+          <span>Tayyor bo‘lish vaqti:</span>
+          <span>10–15 daqiqa</span>
+        </div>
+        <div class="flex justify-between text-zinc-600">
+          <span>Taom va o‘lcham:</span>
+          <span id="modalDishTitle" class="font-bold">Maxsus Burger (M)</span>
+        </div>
+        <div class="flex justify-between text-zinc-600">
+          <span>Vazn / Kaloriya:</span>
+          <span id="modalMetrics" class="font-bold">320 g • 540 kkal</span>
+        </div>
+        <div id="modalNoteRow" class="text-amber-800 bg-amber-100/70 px-2 py-1 rounded hidden">
+          <span>Izoh: </span><span id="modalNoteText" class="font-bold"></span>
+        </div>
+        <div class="flex justify-between font-bold text-[#1d4ed8] text-sm pt-1.5 border-t border-amber-200">
+          <span>To‘lov summasi:</span>
+          <span id="modalTotalSum">0 so'm</span>
+        </div>
+      </div>
+
+      <div class="flex gap-2.5">
+        <button onclick="closeCheckoutModal()" class="flex-1 py-3 rounded-xl bg-zinc-200 hover:bg-zinc-300 text-zinc-800 font-bold text-sm transition">
+          Tahrirlash
+        </button>
+        <button onclick="confirmAndCloseBox()" class="flex-[2] py-3 rounded-xl bg-[#ef4444] hover:bg-red-600 text-white font-extrabold text-sm shadow-[0_4px_0_#111827] transition">
+          Buyurtmani tasdiqlash ✓
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FINAL ORDER COMPLETION SUMMARY BANNER -->
+  <div id="completedBanner" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 hidden items-center gap-4 bg-[#FFFDF9] px-5 py-3.5 rounded-2xl border-4 border-[#1d4ed8] shadow-2xl max-w-[94vw]">
+    <div>
+      <div class="font-display text-lg font-bold text-[#1d4ed8] uppercase">Buyurtma #DG-<span id="finalOrderNum">512</span> qadoqlandi!</div>
+      <div id="finalOrderSummaryText" class="text-xs font-semibold text-zinc-600">Yoqimli ishtaha! Yana boshqa taom tayyorlaysizmi?</div>
+    </div>
+    <button onclick="resetCurrentDish()" class="px-4 py-2.5 rounded-xl bg-[#1d4ed8] hover:bg-blue-700 text-white font-extrabold text-xs shadow-[0_3px_0_#111827] whitespace-nowrap">
+      Yangi buyurtma +
+    </button>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toastBox" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-[#111827] text-[#F4C430] text-xs font-extrabold px-4 py-2.5 rounded-full shadow-xl border-2 border-[#1d4ed8] opacity-0 pointer-events-none transition-opacity duration-300">
+    Xabar
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. SIZE MULTIPLIERS (S / M / XL)
+    // =========================================================================
+    const SIZE_CONFIGS = {
+      S: { id: 'S', label: 'Small (S)', priceMult: 0.85, kcalMult: 0.8, weightMult: 0.8 },
+      M: { id: 'M', label: 'Medium (M)', priceMult: 1.0, kcalMult: 1.0, weightMult: 1.0 },
+      XL: { id: 'XL', label: 'Extra Large (XL)', priceMult: 1.3, kcalMult: 1.35, weightMult: 1.35 }
+    };
+
+    // =========================================================================
+    // 2. MULTI-DISH CONFIGURATIONS WITH RICH VECTOR ART & CHEF PICKS
+    // =========================================================================
+    const DISH_CONFIGS = {
+      burger: {
+        id: 'burger',
+        title: 'Maxsus Burger',
+        emoji: '🍔',
+        boxTheme: 'box-theme-burger',
+        flapText: 'DOUBLE GOOD • FRESH BURGER',
+        closedLidText: 'MAXSUS BURGER QADOQLANDI',
+        modalDesc: 'Buyurtmani tasdiqlang — ustki bulochka tushadi va 3D quti qopqog‘i yopiladi.',
+        subtitle: 'Masalliqlarni ushlab quti ichidagi burgerga sudrab tashlang',
+        basePrice: 8000,
+        baseKcal: 150,
+        baseWeight: 95,
+        chefPicks: [
+          {
+            name: 'Double Smash Burger',
+            badge: '🔥 Hit',
+            baseIndex: 0,
+            items: ['beef', 'beef', 'double_cheese', 'pickles', 'caramel_onion', 'topbun'],
+            sauces: ['mustard', 'ketchup']
+          },
+          {
+            name: 'Crispy Chicken Crunch',
+            badge: '🍗 Qarsildoq',
+            baseIndex: 1,
+            items: ['chicken', 'lettuce', 'cheese', 'tomato', 'topbun'],
+            sauces: ['mayo', 'garlic_sauce']
+          },
+          {
+            name: 'Black Charcoal King',
+            badge: '🖤 Achchiq',
+            baseIndex: 2,
+            items: ['beef', 'smoked_meat', 'mushroom', 'jalapeno', 'cheese', 'egg', 'topbun'],
+            sauces: ['bbq', 'mustard']
+          }
+        ],
+        bases: [
+          { id: 'sesame', name: 'Kunjutli bulochka', icon: '🥯', topColor: '#E59438', bottomColor: '#D9822B', seeds: true },
+          { id: 'brioche', name: 'Brioche bulochka', icon: '🍞', topColor: '#D97724', bottomColor: '#C26419', seeds: false },
+          { id: 'charcoal', name: 'Qora ko‘mirli', icon: '🖤', topColor: '#27272A', bottomColor: '#111827', seeds: true }
+        ],
+        sauces: [
+          { id: 'mustard', name: 'Maxsus Sous', label1: 'DOUBLE', label2: 'SAUCE', price: 2000, kcal: 45, weight: 25, bodyColor: '#FACC15', capColor: '#CA8A04', stroke: '#854D0E', textColor: '#111827' },
+          { id: 'ketchup', name: 'Ketchup', label1: 'TOMATO', label2: 'KETCHUP', price: 2000, kcal: 30, weight: 25, bodyColor: '#ef4444', capColor: '#B91C1C', stroke: '#7F1D1D', textColor: '#FFFFFF' },
+          { id: 'mayo', name: 'Mayonez', label1: 'CREAMY', label2: 'MAYO', price: 2000, kcal: 65, weight: 25, bodyColor: '#F8FAFC', capColor: '#1d4ed8', stroke: '#334155', textColor: '#1d4ed8' },
+          { id: 'garlic_sauce', name: 'Sarimsoqli sous', label1: 'GARLIC', label2: 'DIP', price: 2500, kcal: 55, weight: 25, bodyColor: '#FEF9C3', capColor: '#15803D', stroke: '#14532D', textColor: '#14532D' },
+          { id: 'bbq', name: 'BBQ Sous', label1: 'SMOKY', label2: 'BBQ', price: 2500, kcal: 50, weight: 25, bodyColor: '#78350F', capColor: '#451A03', stroke: '#290F02', textColor: '#FACC15' }
+        ],
+        ingredients: [
+          {
+            id: 'beef', name: 'Mol go‘shti kotleti', sub: 'Sersuv gril kotlet', price: 18000, kcal: 240, weight: 110, height: 22,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><defs><linearGradient id="gBeef" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6E3926"/><stop offset="100%" stop-color="#3B1D12"/></linearGradient></defs><ellipse cx="60" cy="28" rx="52" ry="15" fill="#2B140C"/><ellipse cx="60" cy="22" rx="52" ry="15" fill="url(#gBeef)"/><path d="M26 17L38 25M52 14L66 25M78 16L90 24" stroke="#240F08" stroke-width="3.5" stroke-linecap="round"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 200 54" class="w-[182px] h-[48px] drop-shadow-md"><ellipse cx="100" cy="31" rx="88" ry="19" fill="#2B140C"/><ellipse cx="100" cy="23" rx="88" ry="19" fill="#5E301F"/><ellipse cx="100" cy="21" rx="82" ry="15" fill="#783F2B"/><path d="M40 16L54 27M72 13L88 26M108 13L124 26M142 16L156 26" stroke="#2D140B" stroke-width="4.5" stroke-linecap="round"/></svg>`
+          },
+          {
+            id: 'double_smash', name: 'Double Smash kotlet', sub: 'Qarsildoq chetlari bilan', price: 24000, kcal: 340, weight: 150, height: 26,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><ellipse cx="60" cy="31" rx="54" ry="13" fill="#3B1D12"/><ellipse cx="60" cy="21" rx="52" ry="14" fill="#6E3926"/><path d="M16 20 Q60 10 104 20" stroke="#F59E0B" stroke-width="2" fill="none"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 204 60" class="w-[186px] h-[52px] drop-shadow-md"><ellipse cx="102" cy="38" rx="90" ry="17" fill="#2B140C"/><ellipse cx="102" cy="34" rx="90" ry="16" fill="#5E301F"/><ellipse cx="102" cy="22" rx="88" ry="17" fill="#451A03"/><ellipse cx="102" cy="19" rx="83" ry="14" fill="#7C3F28"/><path d="M36 16L52 26M82 13L98 25M132 14L148 25" stroke="#290F02" stroke-width="4" stroke-linecap="round"/></svg>`
+          },
+          {
+            id: 'chicken', name: 'Crispy tovuq', sub: 'Oltinrang panirovka', price: 15000, kcal: 210, weight: 95, height: 20,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><ellipse cx="60" cy="28" rx="51" ry="15" fill="#B45309"/><ellipse cx="60" cy="22" rx="51" ry="15" fill="#F59E0B"/><circle cx="42" cy="20" r="3" fill="#FDE68A"/><circle cx="74" cy="24" r="3.5" fill="#FDE68A"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 200 52" class="w-[178px] h-[46px] drop-shadow-md"><ellipse cx="100" cy="30" rx="86" ry="18" fill="#B45309"/><ellipse cx="100" cy="22" rx="86" ry="18" fill="#F59E0B"/><ellipse cx="100" cy="20" rx="80" ry="14" fill="#FBBF24"/><circle cx="62" cy="19" r="4" fill="#FEF3C7" opacity="0.7"/><circle cx="115" cy="23" r="4.5" fill="#FEF3C7" opacity="0.7"/><circle cx="145" cy="18" r="3.5" fill="#FEF3C7" opacity="0.7"/></svg>`
+          },
+          {
+            id: 'cheese', name: 'Cheddar pishlog‘i', sub: 'Erigan qaymoqli bo‘lak', price: 5000, kcal: 95, weight: 30, height: 9,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><path d="M12 18L60 8L108 18L95 36L60 44L25 36Z" fill="#FACC15" stroke="#CA8A04" stroke-width="2"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 210 58" class="w-[188px] h-[52px] drop-shadow"><path d="M14 22 L105 8 L196 22 L176 42 C164 42 158 52 148 52 C138 52 134 40 122 40 L105 46 L52 38 C42 38 38 48 30 48 C22 48 20 32 14 22 Z" fill="#FACC15" stroke="#EAB308" stroke-width="2"/></svg>`
+          },
+          {
+            id: 'double_cheese', name: 'Double Cheddar', sub: 'Ikki karra erigan pishloq', price: 8500, kcal: 185, weight: 55, height: 14,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><path d="M12 24L60 14L108 24L95 40L60 46L25 40Z" fill="#EAB308"/><path d="M12 16L60 6L108 16L95 32L60 38L25 32Z" fill="#FACC15" stroke="#CA8A04" stroke-width="1.5"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 212 64" class="w-[190px] h-[56px] drop-shadow"><path d="M14 28 L106 14 L198 28 L178 48 C164 48 158 58 148 58 C138 58 134 46 122 46 L106 52 L52 44 C42 44 38 54 30 54 C22 54 20 38 14 28 Z" fill="#EAB308"/><path d="M14 20 L106 6 L198 20 L178 40 C164 40 158 50 148 50 C138 50 134 38 122 38 L106 44 L52 36 C42 36 38 46 30 46 C22 46 20 30 14 20 Z" fill="#FACC15" stroke="#CA8A04" stroke-width="2"/></svg>`
+          },
+          {
+            id: 'lettuce', name: 'Aysberg salati', sub: 'Yangi qarsildoq barg', price: 3000, kcal: 15, weight: 25, height: 12,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><path d="M14 26 Q25 12 40 22 Q55 10 70 22 Q85 10 106 26 Q92 40 60 38 Q28 40 14 26 Z" fill="#22C55E" stroke="#15803D" stroke-width="2"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 210 54" class="w-[190px] h-[48px] drop-shadow-sm"><path d="M12 26 C20 12, 36 14, 46 22 C58 10, 76 12, 88 21 C102 9, 122 11, 134 21 C148 11, 168 13, 178 23 C190 16, 200 24, 196 32 C186 44, 162 40, 146 44 C126 48, 96 46, 72 44 C48 42, 22 44, 12 26 Z" fill="#22C55E" stroke="#16A34A" stroke-width="2"/><path d="M24 25 Q60 18 105 24 T186 25" stroke="#86EFAC" stroke-width="2.5" fill="none" opacity="0.7"/></svg>`
+          },
+          {
+            id: 'tomato', name: 'Pomidor halqalari', sub: 'Suvli qizil pomidor', price: 3000, kcal: 20, weight: 35, height: 11,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><ellipse cx="44" cy="26" rx="28" ry="12" fill="#ef4444" stroke="#B91C1C" stroke-width="2"/><ellipse cx="78" cy="24" rx="28" ry="12" fill="#F87171" stroke="#B91C1C" stroke-width="2"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 200 48" class="w-[172px] h-[42px] drop-shadow-sm"><ellipse cx="68" cy="25" rx="52" ry="16" fill="#DC2626"/><ellipse cx="68" cy="22" rx="48" ry="13" fill="#ef4444"/><ellipse cx="134" cy="24" rx="52" ry="16" fill="#B91C1C"/><ellipse cx="134" cy="21" rx="48" ry="13" fill="#F87171"/></svg>`
+          },
+          {
+            id: 'pickles', name: 'Tuzlangan bodring', sub: 'Qarsildoq bo‘laklar', price: 3000, kcal: 12, weight: 25, height: 9,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><ellipse cx="42" cy="26" rx="22" ry="10" fill="#65A30D"/><ellipse cx="78" cy="24" rx="22" ry="10" fill="#84CC16"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 200 44" class="w-[168px] h-[38px] drop-shadow-sm"><ellipse cx="56" cy="23" rx="36" ry="12" fill="#4D7C0F"/><ellipse cx="56" cy="20" rx="33" ry="10" fill="#84CC16"/><ellipse cx="104" cy="25" rx="36" ry="12" fill="#3F6212"/><ellipse cx="104" cy="22" rx="33" ry="10" fill="#A3E635"/><ellipse cx="148" cy="22" rx="34" ry="11" fill="#4D7C0F"/><ellipse cx="148" cy="19" rx="31" ry="9" fill="#84CC16"/></svg>`
+          },
+          {
+            id: 'caramel_onion', name: 'Karamellashgan piyoz', sub: 'Shirin qovurilgan piyoz', price: 4000, kcal: 55, weight: 30, height: 10,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><path d="M18 26 Q42 12 64 26 T104 24" stroke="#92400E" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M24 30 Q52 18 82 30" stroke="#D97706" stroke-width="5" fill="none" stroke-linecap="round"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 200 42" class="w-[174px] h-[36px]"><path d="M22 22 Q58 8 98 22 T178 20" stroke="#78350F" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M30 27 Q75 14 120 27 T170 25" stroke="#D97706" stroke-width="5" fill="none" stroke-linecap="round"/></svg>`
+          },
+          {
+            id: 'mushroom', name: 'Qovurilgan qo‘ziqorin', sub: 'Sariyog‘da dimlangan', price: 5500, kcal: 35, weight: 40, height: 12,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><path d="M22 28 C22 14, 52 14, 52 28 H42 V38 H32 V28 Z" fill="#A8A29E"/><path d="M66 28 C66 14, 96 14, 96 28 H86 V38 H76 V28 Z" fill="#D6D3D1"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 200 46" class="w-[174px] h-[40px]"><path d="M28 28 C28 12, 64 12, 64 28 H52 V40 H40 V28 Z" fill="#A8A29E" stroke="#57534E" stroke-width="2"/><path d="M78 26 C78 10, 114 10, 114 26 H102 V38 H90 V26 Z" fill="#D6D3D1" stroke="#78716C" stroke-width="2"/><path d="M128 28 C128 12, 164 12, 164 28 H152 V40 H140 V28 Z" fill="#A8A29E" stroke="#57534E" stroke-width="2"/></svg>`
+          },
+          {
+            id: 'smoked_meat', name: 'Dudlangan mol go‘shti', sub: 'Yupqa qovurilgan lentalar', price: 9500, kcal: 135, weight: 40, height: 11,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><path d="M16 22 Q40 12 60 22 T104 22 L104 32 Q80 22 60 32 T16 32 Z" fill="#BE123C"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 200 46" class="w-[178px] h-[40px] drop-shadow-sm"><path d="M16 18 Q55 8 100 18 T184 18 L184 30 Q140 20 100 30 T16 30 Z" fill="#9F1239"/><path d="M16 22 Q55 12 100 22 T184 22" stroke="#FDA4AF" stroke-width="3" fill="none"/></svg>`
+          },
+          {
+            id: 'egg', name: 'Qovurilgan tuxum', sub: 'Yumshoq sarig‘li tuxum', price: 5000, kcal: 90, weight: 50, height: 11,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><ellipse cx="60" cy="26" rx="44" ry="15" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2"/><circle cx="62" cy="24" r="11" fill="#F59E0B"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 200 48" class="w-[170px] h-[42px] drop-shadow-sm"><path d="M24 25 C20 14, 52 10, 96 11 C142 12, 178 15, 176 26 C174 37, 136 39, 98 38 C58 37, 28 36, 24 25 Z" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/><ellipse cx="102" cy="22" rx="24" ry="11" fill="#F59E0B"/></svg>`
+          },
+          {
+            id: 'jalapeno', name: 'Achchiq xalapenyo', sub: 'Yashil achchiq halqalar', price: 3500, kcal: 10, weight: 15, height: 9,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><ellipse cx="44" cy="26" rx="18" ry="9" fill="none" stroke="#15803D" stroke-width="5"/><ellipse cx="76" cy="24" rx="18" ry="9" fill="none" stroke="#16A34A" stroke-width="5"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 200 44" class="w-[164px] h-[36px]"><ellipse cx="64" cy="22" rx="28" ry="10" fill="none" stroke="#15803D" stroke-width="6"/><ellipse cx="104" cy="24" rx="28" ry="10" fill="none" stroke="#16A34A" stroke-width="6"/><ellipse cx="138" cy="21" rx="26" ry="9" fill="none" stroke="#15803D" stroke-width="6"/></svg>`
+          },
+          {
+            id: 'topbun', name: 'Ustki bulochka', sub: 'Burgerni yopish uchun tashlang', price: 0, kcal: 140, weight: 65, height: 24, isTopBun: true,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><path d="M14 36 C14 12, 106 12, 106 36 Z" fill="#E59438"/></svg>`,
+            renderDish: (base) => {
+              const seeds = base.seeds ? `<ellipse cx="70" cy="22" rx="4" ry="2" fill="#FEF3C7"/><ellipse cx="100" cy="16" rx="4" ry="2" fill="#FEF3C7"/><ellipse cx="130" cy="22" rx="4" ry="2" fill="#FEF3C7"/>` : '';
+              return `<svg viewBox="0 0 200 68" class="w-[182px] h-[62px] drop-shadow-lg"><path d="M16 46 C16 14, 184 14, 184 46 C184 56, 16 56, 16 46 Z" fill="${base.topColor}"/>${seeds}</svg>`;
+            }
+          }
+        ]
+      },
+
+      lavash: {
+        id: 'lavash',
+        title: 'Maxsus Lavash',
+        emoji: '🌯',
+        boxTheme: 'box-theme-lavash',
+        flapText: 'DOUBLE GOOD • DONAR & LAVASH',
+        closedLidText: 'LAVASH O‘RALDI VA QADOQLANDI',
+        modalDesc: 'Buyurtmani tasdiqlang — lavash xamiri o‘ralib, qutiga joylanadi.',
+        subtitle: 'Masalliqlarni ochiq lavash xamiriga sudrab tashlang',
+        basePrice: 8000,
+        baseKcal: 190,
+        baseWeight: 110,
+        chefPicks: [
+          {
+            name: 'Qirollik Mol Lavash',
+            badge: '👑 Klassik',
+            baseIndex: 0,
+            items: ['donar_beef', 'lavash_fries', 'lavash_tomato', 'lavash_pickles', 'lavash_mozzarella'],
+            sauces: ['garlic_white', 'spicy_red']
+          },
+          {
+            name: 'Pishloqli Tovuq Roll',
+            badge: '🧀 Pishloqli',
+            baseIndex: 1,
+            items: ['donar_chicken', 'lavash_mozzarella', 'lavash_cucumber', 'greens'],
+            sauces: ['cheese_sauce', 'garlic_white']
+          },
+          {
+            name: 'Tandir Spicy Donar',
+            badge: '🔥 Achchiq',
+            baseIndex: 2,
+            items: ['donar_beef', 'spicy_carrot', 'lavash_jalapeno', 'cabbage', 'lavash_fries'],
+            sauces: ['spicy_red', 'garlic_white']
+          }
+        ],
+        bases: [
+          { id: 'classic_wrap', name: 'Oddiy xamir', icon: '🫓', fill: '#FDF3DC', border: '#D9B679' },
+          { id: 'cheese_wrap', name: 'Pishloqli xamir', icon: '🧀', fill: '#FDE08D', border: '#EAB308' },
+          { id: 'tandir_wrap', name: 'Tandir xamir', icon: '🔥', fill: '#F5D6A1', border: '#B47B38' }
+        ],
+        sauces: [
+          { id: 'garlic_white', name: 'Sarimsoqli sous', label1: 'GARLIC', label2: 'WHITE', price: 2000, kcal: 55, weight: 25, bodyColor: '#F8FAFC', capColor: '#1d4ed8', stroke: '#334155', textColor: '#1d4ed8' },
+          { id: 'spicy_red', name: 'Achchiq qizil sous', label1: 'HOT', label2: 'CHILI', price: 2000, kcal: 30, weight: 25, bodyColor: '#ef4444', capColor: '#7F1D1D', stroke: '#450A0A', textColor: '#FACC15' },
+          { id: 'cheese_sauce', name: 'Pishloqli sous', label1: 'CHEDDAR', label2: 'MELT', price: 2500, kcal: 70, weight: 25, bodyColor: '#FACC15', capColor: '#CA8A04', stroke: '#854D0E', textColor: '#111827' }
+        ],
+        ingredients: [
+          {
+            id: 'donar_beef', name: 'Donar mol go‘shti', sub: 'Vertelda pishgan go‘sht', price: 18000, kcal: 260, weight: 110,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><rect x="20" y="14" width="32" height="14" rx="5" fill="#5C2E1E" transform="rotate(-12 20 14)"/><rect x="52" y="12" width="36" height="14" rx="5" fill="#78350F" transform="rotate(8 52 12)"/><rect x="36" y="26" width="40" height="14" rx="5" fill="#451A03"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 90 50" class="w-14 h-9 drop-shadow"><path d="M12 18 L44 10 L48 24 L16 32 Z" fill="#5C2E1E"/><path d="M38 22 L76 16 L80 30 L42 38 Z" fill="#78350F"/><path d="M22 30 L62 28 L60 42 L20 44 Z" fill="#451A03"/></svg>`
+          },
+          {
+            id: 'donar_chicken', name: 'Gril tovuq go‘shti', sub: 'Ziravorli mayin tovuq', price: 15000, kcal: 220, weight: 100,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><rect x="22" y="14" width="34" height="14" rx="5" fill="#D97706" transform="rotate(-10 22 14)"/><rect x="52" y="16" width="36" height="14" rx="5" fill="#F59E0B" transform="rotate(10 52 16)"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 90 50" class="w-14 h-9 drop-shadow"><rect x="10" y="12" width="38" height="14" rx="6" fill="#D97706" transform="rotate(-14 10 12)"/><rect x="36" y="18" width="42" height="14" rx="6" fill="#F59E0B" transform="rotate(10 36 18)"/><rect x="20" y="28" width="40" height="13" rx="6" fill="#B45309"/></svg>`
+          },
+          {
+            id: 'lavash_fries', name: 'Kartoshka fri', sub: 'Qarsildoq tayoqchalar', price: 5000, kcal: 150, weight: 55,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><rect x="22" y="16" width="60" height="7" rx="3" fill="#FACC15" transform="rotate(-8 22 16)"/><rect x="28" y="26" width="62" height="7" rx="3" fill="#EAB308" transform="rotate(6 28 26)"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 90 50" class="w-14 h-9 drop-shadow-sm"><rect x="10" y="14" width="54" height="7" rx="3" fill="#FACC15" transform="rotate(-12 10 14)"/><rect x="22" y="22" width="56" height="7" rx="3" fill="#FDE047" transform="rotate(8 22 22)"/><rect x="14" y="31" width="52" height="7" rx="3" fill="#EAB308" transform="rotate(-4 14 31)"/></svg>`
+          },
+          {
+            id: 'lavash_mozzarella', name: 'Mozzarella & Cheddar', sub: 'Erigan pishloq aralashmasi', price: 6000, kcal: 120, weight: 40,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><rect x="24" y="16" width="72" height="18" rx="8" fill="#FEF08A" stroke="#EAB308" stroke-width="2"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 90 50" class="w-14 h-8"><path d="M14 18 Q45 10 76 18 L72 34 Q45 40 18 34 Z" fill="#FEF08A" stroke="#FACC15" stroke-width="2"/></svg>`
+          },
+          {
+            id: 'lavash_tomato', name: 'Yangi pomidor', sub: 'To‘g‘ralgan qizil pomidor', price: 3000, kcal: 20, weight: 35,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><circle cx="44" cy="25" r="14" fill="#ef4444"/><circle cx="76" cy="25" r="14" fill="#DC2626"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 90 50" class="w-13 h-8 drop-shadow-sm"><circle cx="30" cy="25" r="16" fill="#DC2626"/><circle cx="30" cy="25" r="12" fill="#F87171"/><circle cx="60" cy="25" r="16" fill="#ef4444"/></svg>`
+          },
+          {
+            id: 'lavash_cucumber', name: 'Yangi bodring', sub: 'Yashil suvli bodring', price: 3000, kcal: 14, weight: 35,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><ellipse cx="44" cy="25" rx="16" ry="11" fill="#16A34A"/><ellipse cx="76" cy="25" rx="16" ry="11" fill="#22C55E"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 90 50" class="w-13 h-8"><ellipse cx="32" cy="25" rx="18" ry="12" fill="#16A34A"/><ellipse cx="60" cy="25" rx="18" ry="12" fill="#4ADE80"/></svg>`
+          },
+          {
+            id: 'lavash_pickles', name: 'Tuzlangan bodring', sub: 'Qarsildoq marinad', price: 3000, kcal: 12, weight: 25,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><circle cx="44" cy="25" r="13" fill="#65A30D"/><circle cx="76" cy="25" r="13" fill="#84CC16"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 90 50" class="w-13 h-8 drop-shadow-sm"><circle cx="32" cy="24" r="14" fill="#4D7C0F"/><circle cx="32" cy="24" r="10" fill="#A3E635"/><circle cx="58" cy="26" r="14" fill="#65A30D"/></svg>`
+          },
+          {
+            id: 'greens', name: 'Ko‘katlar (Kashnich/Ukrop)', sub: 'Xushbo‘y yangi ko‘kat', price: 2500, kcal: 10, weight: 20,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><path d="M24 30 L40 12 M48 32 L60 10 M72 30 L86 14" stroke="#15803D" stroke-width="5" stroke-linecap="round"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 90 50" class="w-13 h-8"><path d="M16 34 L32 12 M42 36 L52 10 M66 34 L78 14" stroke="#15803D" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="14" r="6" fill="#22C55E"/><circle cx="52" cy="12" r="6" fill="#4ADE80"/><circle cx="76" cy="16" r="6" fill="#22C55E"/></svg>`
+          },
+          {
+            id: 'spicy_carrot', name: 'Koreyscha sabzi', sub: 'Ziravorli achchiq sabzi', price: 3500, kcal: 45, weight: 35,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><path d="M18 20 L102 24 M22 30 L98 28" stroke="#EA580C" stroke-width="5" stroke-linecap="round"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 90 50" class="w-14 h-8"><path d="M10 18 L80 22 M14 28 L78 26 M12 36 L74 34" stroke="#EA580C" stroke-width="4.5" stroke-linecap="round"/></svg>`
+          },
+          {
+            id: 'cabbage', name: 'Karam salati', sub: 'Yengil mayin karam', price: 2500, kcal: 15, weight: 30,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><path d="M22 25 Q45 10 68 25 T102 25" stroke="#4ADE80" stroke-width="8" fill="none" stroke-linecap="round"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 90 50" class="w-14 h-8"><path d="M12 20 Q35 8 58 20 T82 22" stroke="#22C55E" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M16 32 Q42 20 74 32" stroke="#86EFAC" stroke-width="6" fill="none" stroke-linecap="round"/></svg>`
+          },
+          {
+            id: 'lavash_jalapeno', name: 'Achchiq xalapenyo', sub: 'O‘tkir ta’m uchun', price: 3500, kcal: 10, weight: 15,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><circle cx="44" cy="25" r="11" fill="none" stroke="#15803D" stroke-width="5"/><circle cx="76" cy="25" r="11" fill="none" stroke="#16A34A" stroke-width="5"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 90 50" class="w-12 h-8"><circle cx="30" cy="25" r="12" fill="none" stroke="#15803D" stroke-width="5"/><circle cx="60" cy="25" r="12" fill="none" stroke="#16A34A" stroke-width="5"/></svg>`
+          }
+        ]
+      },
+
+      pizza: {
+        id: 'pizza',
+        title: 'Maxsus Pitsa',
+        emoji: '🍕',
+        boxTheme: 'box-theme-pizza',
+        flapText: 'DOUBLE GOOD • HOT STONE PIZZA',
+        closedLidText: 'PITSA 8 BO‘LAKKA KESILDI VA QADOQLANDI',
+        modalDesc: 'Buyurtmani tasdiqlang — pitsa 8 bo‘lakka kesiladi va quti yopiladi.',
+        subtitle: 'Masalliqlarni pitsa xamirining xohlagan joyiga sudrab qo‘ying',
+        basePrice: 24000,
+        baseKcal: 420,
+        baseWeight: 260,
+        chefPicks: [
+          {
+            name: 'Pepperoni Feast',
+            badge: '🍕 Mashhur',
+            baseIndex: 2,
+            items: ['pizza_cheese', 'pepperoni', 'pepperoni', 'pepperoni', 'olives', 'basil'],
+            sauces: ['marinara']
+          },
+          {
+            name: 'Tovuq & Qo‘ziqorin',
+            badge: '🍄 Kaymoqli',
+            baseIndex: 1,
+            items: ['pizza_cheese', 'pizza_chicken', 'mushroom', 'bell_pepper', 'corn'],
+            sauces: ['alfredo']
+          },
+          {
+            name: 'Spicy BBQ Ranch',
+            badge: '🔥 Tutunli',
+            baseIndex: 0,
+            items: ['pizza_cheese', 'pizza_chicken', 'pepperoni', 'pizza_jalapeno', 'pizza_tomato'],
+            sauces: ['bbq_pizza']
+          }
+        ],
+        bases: [
+          { id: 'thin_crust', name: 'Yupqa xamir', icon: '🫓', crustColor: '#E5A95C', cheeseRim: false },
+          { id: 'thick_crust', name: 'Qalin xamir', icon: '🍞', crustColor: '#D99441', cheeseRim: false },
+          { id: 'cheese_rim', name: 'Pishloqli bort', icon: '🧀', crustColor: '#EAB308', cheeseRim: true }
+        ],
+        sauces: [
+          { id: 'marinara', name: 'Marinara sous', label1: 'ITALIAN', label2: 'TOMATO', price: 3000, kcal: 40, weight: 45, bodyColor: '#ef4444', capColor: '#991B1B', stroke: '#7F1D1D', textColor: '#FACC15' },
+          { id: 'alfredo', name: 'Alfredo sous', label1: 'CREAMY', label2: 'ALFREDO', price: 4000, kcal: 85, weight: 45, bodyColor: '#FFFBEB', capColor: '#1d4ed8', stroke: '#334155', textColor: '#1d4ed8' },
+          { id: 'bbq_pizza', name: 'BBQ sous', label1: 'SMOKY', label2: 'BBQ', price: 3500, kcal: 55, weight: 45, bodyColor: '#78350F', capColor: '#451A03', stroke: '#1C0D08', textColor: '#FACC15' }
+        ],
+        ingredients: [
+          {
+            id: 'pizza_cheese', name: 'Mozzarella pishloq', sub: 'Ko‘p pishloqli qatlam', price: 9000, kcal: 180, weight: 80,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><circle cx="60" cy="25" r="20" fill="#FEF08A" stroke="#FACC15" stroke-width="2"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 90 90" class="w-16 h-16 opacity-90"><path d="M20 28 Q45 12 70 28 Q82 52 65 72 Q40 82 22 65 Q10 45 20 28 Z" fill="#FEF08A"/></svg>`
+          },
+          {
+            id: 'pepperoni', name: 'Pepperoni kolbasa', sub: 'Achchiq dudlangan', price: 11000, kcal: 160, weight: 55,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><circle cx="45" cy="25" r="14" fill="#ef4444"/><circle cx="75" cy="25" r="14" fill="#B91C1C"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 60 60" class="w-10 h-10 drop-shadow-sm"><circle cx="30" cy="30" r="24" fill="#ef4444" stroke="#991B1B" stroke-width="2"/><circle cx="22" cy="22" r="3" fill="#FCA5A5"/><circle cx="36" cy="25" r="2.5" fill="#FCA5A5"/><circle cx="28" cy="38" r="3" fill="#FCA5A5"/></svg>`
+          },
+          {
+            id: 'mushroom', name: 'Qo‘ziqorin', sub: 'Yangi shampinyon', price: 6000, kcal: 25, weight: 45,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><path d="M40 28 C40 12, 80 12, 80 28 H66 V40 H54 V28 Z" fill="#D6D3D1" stroke="#78716C" stroke-width="2"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 60 60" class="w-10 h-10 drop-shadow-sm"><path d="M12 30 C12 10, 48 10, 48 30 H36 V46 H24 V30 Z" fill="#E7E5E4" stroke="#78716C" stroke-width="2.5"/></svg>`
+          },
+          {
+            id: 'olives', name: 'Qora zaytun', sub: 'Halqa qilib kesilgan', price: 5000, kcal: 35, weight: 30,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><circle cx="46" cy="25" r="11" fill="none" stroke="#111827" stroke-width="6"/><circle cx="74" cy="25" r="11" fill="none" stroke="#27272A" stroke-width="6"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 60 60" class="w-8 h-8 drop-shadow-sm"><circle cx="30" cy="30" r="16" fill="none" stroke="#111827" stroke-width="9"/></svg>`
+          },
+          {
+            id: 'bell_pepper', name: 'Bulg‘or qalampiri', sub: 'Yashil va qizil', price: 4500, kcal: 18, weight: 35,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><path d="M35 20 Q60 36 85 20" stroke="#16A34A" stroke-width="8" fill="none" stroke-linecap="round"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 60 60" class="w-10 h-10 drop-shadow-sm"><path d="M12 24 Q30 44 48 24" stroke="#16A34A" stroke-width="9" fill="none" stroke-linecap="round"/></svg>`
+          },
+          {
+            id: 'pizza_chicken', name: 'Tovuq filesi', sub: 'Grilda pishgan', price: 10000, kcal: 140, weight: 65,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><rect x="36" y="14" width="48" height="22" rx="8" fill="#F59E0B"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 60 60" class="w-10 h-10 drop-shadow-sm"><rect x="12" y="16" width="36" height="26" rx="10" fill="#F59E0B" stroke="#B45309" stroke-width="2"/></svg>`
+          },
+          {
+            id: 'corn', name: 'Shirin makkajo‘xori', sub: 'Sariq donachalar', price: 4500, kcal: 40, weight: 35,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><circle cx="42" cy="24" r="6" fill="#FACC15"/><circle cx="58" cy="20" r="6" fill="#EAB308"/><circle cx="72" cy="27" r="6" fill="#FACC15"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 60 60" class="w-9 h-9"><circle cx="22" cy="24" r="6" fill="#FACC15" stroke="#CA8A04" stroke-width="1.5"/><circle cx="36" cy="20" r="6" fill="#EAB308" stroke="#CA8A04" stroke-width="1.5"/><circle cx="30" cy="36" r="6" fill="#FACC15" stroke="#CA8A04" stroke-width="1.5"/></svg>`
+          },
+          {
+            id: 'pizza_jalapeno', name: 'Achchiq xalapenyo', sub: 'O‘tkir halqalar', price: 4000, kcal: 12, weight: 20,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><circle cx="46" cy="25" r="11" fill="none" stroke="#15803D" stroke-width="5"/><circle cx="74" cy="25" r="11" fill="none" stroke="#16A34A" stroke-width="5"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 60 60" class="w-8 h-8"><circle cx="30" cy="30" r="15" fill="none" stroke="#15803D" stroke-width="7"/></svg>`
+          },
+          {
+            id: 'pizza_tomato', name: 'Cherri pomidor', sub: 'Suvli pomidor', price: 4500, kcal: 18, weight: 35,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><circle cx="60" cy="25" r="15" fill="#ef4444"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 60 60" class="w-9 h-9 drop-shadow-sm"><circle cx="30" cy="30" r="20" fill="#ef4444" stroke="#B91C1C" stroke-width="2"/><circle cx="30" cy="30" r="14" fill="#FCA5A5" opacity="0.45"/></svg>`
+          },
+          {
+            id: 'basil', name: 'Rayhon barglari', sub: 'Yangi italyan rayhoni', price: 3000, kcal: 5, weight: 10,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><path d="M35 30 Q60 8 85 30 Q60 42 35 30 Z" fill="#15803D"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 60 60" class="w-9 h-9 drop-shadow-sm"><path d="M10 32 Q30 8 50 32 Q30 46 10 32 Z" fill="#15803D"/><path d="M14 32 L46 32" stroke="#86EFAC" stroke-width="2"/></svg>`
+          }
+        ]
+      },
+
+      hotdog: {
+        id: 'hotdog',
+        title: 'Royal Hot-Dog',
+        emoji: '🌭',
+        boxTheme: 'box-theme-hotdog',
+        flapText: 'DOUBLE GOOD • STREET HOT-DOG',
+        closedLidText: 'HOT-DOG QADOQLANDI',
+        modalDesc: 'Buyurtmani tasdiqlang — hot-dog qutisi yopiladi va tayyorlanadi.',
+        subtitle: 'Sosiska va masalliqlarni hot-dog bulochkasiga sudrang',
+        basePrice: 8000,
+        baseKcal: 160,
+        baseWeight: 105,
+        chefPicks: [
+          {
+            name: 'Classic Street Dog',
+            badge: '🌭 Klassik',
+            baseIndex: 0,
+            items: ['vienna_sausage', 'caramel_onion', 'hd_pickles', 'hd_cheese'],
+            sauces: ['mustard_hd', 'ketchup_hd']
+          },
+          {
+            name: 'Smoked Hunter Baguette',
+            badge: '🔥 Dudlangan',
+            baseIndex: 1,
+            items: ['hunter_sausage', 'hd_cheese', 'hd_jalapeno', 'shredded_cabbage'],
+            sauces: ['ketchup_hd', 'mayo_hd']
+          },
+          {
+            name: 'Double Sausage XL',
+            badge: '💪 To‘yimli',
+            baseIndex: 2,
+            items: ['vienna_sausage', 'hunter_sausage', 'caramel_onion', 'hd_cheese', 'hd_pickles'],
+            sauces: ['mustard_hd', 'mayo_hd']
+          }
+        ],
+        bases: [
+          { id: 'soft_bun', name: 'Klassik bulochka', icon: '🌭', bunColor: '#E59438' },
+          { id: 'baguette_bun', name: 'Baget bulochka', icon: '🥖', bunColor: '#C97A2B' },
+          { id: 'sesame_hd', name: 'Kunjutli bulochka', icon: '🥯', bunColor: '#DF8B32' }
+        ],
+        sauces: [
+          { id: 'mustard_hd', name: 'Gorchitsa', label1: 'CLASSIC', label2: 'MUSTARD', price: 1500, kcal: 25, weight: 20, bodyColor: '#FACC15', capColor: '#CA8A04', stroke: '#854D0E', textColor: '#111827' },
+          { id: 'ketchup_hd', name: 'Ketchup', label1: 'TOMATO', label2: 'KETCHUP', price: 1500, kcal: 30, weight: 20, bodyColor: '#ef4444', capColor: '#B91C1C', stroke: '#7F1D1D', textColor: '#FFFFFF' },
+          { id: 'mayo_hd', name: 'Mayonez', label1: 'CREAMY', label2: 'MAYO', price: 1500, kcal: 60, weight: 20, bodyColor: '#F8FAFC', capColor: '#1d4ed8', stroke: '#334155', textColor: '#1d4ed8' }
+        ],
+        ingredients: [
+          {
+            id: 'vienna_sausage', name: 'Vena sosiskasi', sub: 'Suvli klassik sosiska', price: 11000, kcal: 190, weight: 95, isSausage: true,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><rect x="14" y="16" width="92" height="18" rx="9" fill="#EA580C" stroke="#9A3412" stroke-width="2"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 240 44" class="w-[215px] h-[38px] drop-shadow-md"><rect x="8" y="8" width="224" height="28" rx="14" fill="#EA580C" stroke="#9A3412" stroke-width="2.5"/><path d="M26 15 H214" stroke="#FDBA74" stroke-width="3.5" stroke-linecap="round" opacity="0.55"/></svg>`
+          },
+          {
+            id: 'hunter_sausage', name: 'Ovchi kolbasa', sub: 'Dudlangan ziravorli', price: 14000, kcal: 230, weight: 105, isSausage: true,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><rect x="14" y="16" width="92" height="18" rx="9" fill="#991B1B" stroke="#450A0A" stroke-width="2"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 240 44" class="w-[215px] h-[38px] drop-shadow-md"><rect x="8" y="8" width="224" height="28" rx="14" fill="#991B1B" stroke="#450A0A" stroke-width="2.5"/><path d="M26 15 H214" stroke="#FCA5A5" stroke-width="3" stroke-linecap="round" opacity="0.45"/></svg>`
+          },
+          {
+            id: 'caramel_onion', name: 'Qovurilgan piyoz', sub: 'Oltinrang qarsildoq', price: 3500, kcal: 65, weight: 30,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><path d="M20 28 Q60 12 100 28" stroke="#D97706" stroke-width="8" fill="none" stroke-linecap="round"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 220 36" class="w-[195px] h-[30px]"><path d="M18 20 Q55 10 92 20 T166 20 T204 18" stroke="#B45309" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M26 24 Q70 14 114 24 T192 22" stroke="#F59E0B" stroke-width="4" fill="none" stroke-linecap="round"/></svg>`
+          },
+          {
+            id: 'hd_pickles', name: 'Tuzlangan bodring', sub: 'Qarsildoq bo‘laklar', price: 3000, kcal: 12, weight: 25,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><circle cx="42" cy="25" r="11" fill="#65A30D"/><circle cx="78" cy="25" r="11" fill="#84CC16"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 220 36" class="w-[190px] h-[30px]"><circle cx="45" cy="18" r="12" fill="#65A30D"/><circle cx="85" cy="18" r="12" fill="#84CC16"/><circle cx="125" cy="18" r="12" fill="#65A30D"/><circle cx="165" cy="18" r="12" fill="#84CC16"/></svg>`
+          },
+          {
+            id: 'shredded_cabbage', name: 'Mayda karam', sub: 'Yengil salat karami', price: 2500, kcal: 15, weight: 30,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><path d="M18 24 Q60 12 102 24" stroke="#4ADE80" stroke-width="7" fill="none" stroke-linecap="round"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 220 36" class="w-[190px] h-[30px]"><path d="M20 18 Q70 8 120 18 T200 18" stroke="#22C55E" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M26 24 Q80 14 134 24 T194 24" stroke="#86EFAC" stroke-width="5" fill="none" stroke-linecap="round"/></svg>`
+          },
+          {
+            id: 'hd_cheese', name: 'Cheddar pishlog‘i', sub: 'Erigan pishloq', price: 5000, kcal: 95, weight: 30,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><rect x="24" y="16" width="72" height="18" rx="6" fill="#FACC15"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 220 36" class="w-[195px] h-[30px]"><path d="M16 14 L55 8 L95 16 L135 8 L175 16 L204 12 L195 28 L25 28 Z" fill="#FACC15" stroke="#EAB308" stroke-width="2"/></svg>`
+          },
+          {
+            id: 'hd_jalapeno', name: 'Achchiq xalapenyo', sub: 'Yashil achchiq qalampir', price: 3500, kcal: 10, weight: 15,
+            svgIcon: `<svg viewBox="0 0 120 50" class="w-16 h-9"><circle cx="44" cy="25" r="10" fill="none" stroke="#15803D" stroke-width="5"/><circle cx="76" cy="25" r="10" fill="none" stroke="#16A34A" stroke-width="5"/></svg>`,
+            renderDish: () => `<svg viewBox="0 0 220 36" class="w-[185px] h-[30px]"><circle cx="52" cy="18" r="10" fill="none" stroke="#15803D" stroke-width="5"/><circle cx="105" cy="18" r="10" fill="none" stroke="#16A34A" stroke-width="5"/><circle cx="158" cy="18" r="10" fill="none" stroke="#15803D" stroke-width="5"/></svg>`
+          }
+        ]
+      }
+    };
+
+    // =========================================================================
+    // 3. EXPANDED SIDES CATALOG ('Qo'shimcha mahsulotlar')
+    // =========================================================================
+    const SIDES_CATALOG = [
+      {
+        id: 'fries', name: 'Kartoshka Fri', price: 12000, kcal: 310, weight: 120,
+        svg: `<svg viewBox="0 0 80 80" class="w-11 h-11 mx-auto drop-shadow"><rect x="22" y="10" width="7" height="34" rx="2" fill="#FACC15" transform="rotate(-12 22 10)"/><rect x="33" y="6" width="7" height="36" rx="2" fill="#FDE047"/><rect x="44" y="8" width="7" height="35" rx="2" fill="#FACC15" transform="rotate(10 44 8)"/><path d="M18 34H62L56 70H24L18 34Z" fill="#1d4ed8" stroke="#111827" stroke-width="2.5"/><text x="40" y="56" text-anchor="middle" fill="#FACC15" font-family="Oswald" font-weight="700" font-size="11">FRIES</text></svg>`
+      },
+      {
+        id: 'nuggets', name: 'Naggetslar (6 dona)', price: 16000, kcal: 280, weight: 130,
+        svg: `<svg viewBox="0 0 80 80" class="w-11 h-11 mx-auto drop-shadow"><ellipse cx="32" cy="36" rx="14" ry="10" fill="#F59E0B" stroke="#B45309" stroke-width="2"/><ellipse cx="50" cy="40" rx="14" ry="10" fill="#FBBF24" stroke="#B45309" stroke-width="2"/><ellipse cx="38" cy="52" rx="15" ry="10" fill="#D97706" stroke="#92400E" stroke-width="2"/></svg>`
+      },
+      {
+        id: 'cheese_sticks', name: 'Pishloqli Tayoqchalar', price: 18000, kcal: 330, weight: 140,
+        svg: `<svg viewBox="0 0 80 80" class="w-11 h-11 mx-auto drop-shadow"><rect x="16" y="24" width="46" height="11" rx="5.5" fill="#FBBF24" stroke="#B45309" stroke-width="2" transform="rotate(-14 16 24)"/><rect x="18" y="42" width="46" height="11" rx="5.5" fill="#F59E0B" stroke="#92400E" stroke-width="2" transform="rotate(8 18 42)"/></svg>`
+      },
+      {
+        id: 'onion_rings', name: 'Piyoz Halqalari', price: 14000, kcal: 240, weight: 110,
+        svg: `<svg viewBox="0 0 80 80" class="w-11 h-11 mx-auto drop-shadow"><circle cx="34" cy="38" r="15" fill="none" stroke="#F59E0B" stroke-width="8"/><circle cx="48" cy="46" r="14" fill="none" stroke="#D97706" stroke-width="7"/></svg>`
+      },
+      {
+        id: 'wings', name: 'Tovuq Qanotchalari', price: 22000, kcal: 360, weight: 165,
+        svg: `<svg viewBox="0 0 80 80" class="w-11 h-11 mx-auto drop-shadow"><path d="M18 44 C18 22, 54 18, 64 34 C58 52, 34 62, 18 44 Z" fill="#DC2626" stroke="#7F1D1D" stroke-width="2.5"/><path d="M24 38 Q42 28 56 36" stroke="#FCA5A5" stroke-width="2.5" fill="none"/></svg>`
+      },
+      {
+        id: 'shake_icecream', name: 'Muzqaymoq / Kokteyl', price: 15000, kcal: 290, weight: 250,
+        svg: `<svg viewBox="0 0 80 80" class="w-11 h-11 mx-auto drop-shadow"><path d="M25 32H55L50 68H30L25 32Z" fill="#FDF2F8" stroke="#DB2777" stroke-width="2.5"/><circle cx="40" cy="24" r="14" fill="#F472B6" stroke="#BE185D" stroke-width="2"/><circle cx="40" cy="10" r="4" fill="#ef4444"/></svg>`
+      },
+      {
+        id: 'extra_sauce_pack', name: 'Qo‘shimcha Sous (2x)', price: 4000, kcal: 70, weight: 50,
+        svg: `<svg viewBox="0 0 80 80" class="w-11 h-11 mx-auto drop-shadow"><circle cx="28" cy="44" r="15" fill="#FACC15" stroke="#854D0E" stroke-width="2.5"/><circle cx="52" cy="44" r="15" fill="#ef4444" stroke="#7F1D1D" stroke-width="2.5"/><path d="M16 32H40M40 32H64" stroke="#111827" stroke-width="2"/></svg>`
+      },
+      {
+        id: 'drink', name: 'Muzdek Cola 0.4L', price: 8000, kcal: 140, weight: 400,
+        svg: `<svg viewBox="0 0 80 80" class="w-11 h-11 mx-auto drop-shadow"><path d="M46 6L52 24" stroke="#ef4444" stroke-width="4" stroke-linecap="round"/><path d="M24 24H56L52 70H28L24 24Z" fill="#1d4ed8" stroke="#111827" stroke-width="2.5"/><rect x="21" y="20" width="38" height="6" rx="3" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2"/><circle cx="40" cy="47" r="9" fill="#ef4444"/></svg>`
+      }
+    ];
+
+    // =========================================================================
+    // 4. APPLICATION STATE PER DISH
+    // =========================================================================
+    let currentDishId = 'burger';
+    let currentSize = 'M';
+    let chefNote = '';
+    let soundEnabled = true;
+    let nextUid = 200;
+
+    let dishStates = {
+      burger: {
+        baseIndex: 0,
+        items: [
+          { uid: 1, type: 'beef', x: 50, y: 50 },
+          { uid: 2, type: 'cheese', x: 50, y: 50 },
+          { uid: 3, type: 'lettuce', x: 50, y: 50 }
+        ],
+        sauces: [],
+        sides: [],
+        hasTopBun: false,
+        isWrappedOrSliced: false,
+        isBoxClosed: false
+      },
+      lavash: {
+        baseIndex: 0,
+        items: [
+          { uid: 10, type: 'donar_beef', x: 45, y: 42 },
+          { uid: 11, type: 'lavash_fries', x: 56, y: 52 },
+          { uid: 12, type: 'lavash_tomato', x: 46, y: 62 }
+        ],
+        sauces: [],
+        sides: [],
+        isWrappedOrSliced: false,
+        isBoxClosed: false
+      },
+      pizza: {
+        baseIndex: 0,
+        items: [
+          { uid: 20, type: 'pizza_cheese', x: 50, y: 50 },
+          { uid: 21, type: 'pepperoni', x: 37, y: 38 },
+          { uid: 22, type: 'pepperoni', x: 63, y: 40 },
+          { uid: 23, type: 'mushroom', x: 44, y: 62 },
+          { uid: 24, type: 'olives', x: 62, y: 60 }
+        ],
+        sauces: [],
+        sides: [],
+        isWrappedOrSliced: false,
+        isBoxClosed: false
+      },
+      hotdog: {
+        baseIndex: 0,
+        items: [
+          { uid: 30, type: 'vienna_sausage', x: 50, y: 50 },
+          { uid: 31, type: 'caramel_onion', x: 50, y: 45 }
+        ],
+        sauces: [],
+        sides: [],
+        isWrappedOrSliced: false,
+        isBoxClosed: false
+      }
+    };
+
+    let dragSession = {
+      active: false,
+      kind: null, // 'ingredient' | 'side' | 'bottle' | 'existing-item'
+      id: null,
+      uid: null,
+      startX: 0,
+      startY: 0,
+      moved: false,
+      bottleEl: null,
+      hasPouredThisDrag: false
+    };
+
+    // =========================================================================
+    // 5. WEB AUDIO SYNTHESIZER
+    // =========================================================================
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(type) {
+      if (!soundEnabled) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'pop') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(260, now);
+        osc.frequency.exponentialRampToValueAtTime(540, now + 0.09);
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        osc.start(now); osc.stop(now + 0.12);
+      } else if (type === 'squish') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(360, now);
+        osc.frequency.exponentialRampToValueAtTime(140, now + 0.17);
+        gain.gain.setValueAtTime(0.16, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.19);
+        osc.start(now); osc.stop(now + 0.19);
+      } else if (type === 'remove') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(320, now);
+        osc.frequency.exponentialRampToValueAtTime(150, now + 0.1);
+        gain.gain.setValueAtTime(0.14, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+        osc.start(now); osc.stop(now + 0.11);
+      } else if (type === 'checkout') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(330, now);
+        osc.frequency.setValueAtTime(495, now + 0.1);
+        osc.frequency.setValueAtTime(660, now + 0.2);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+        osc.start(now); osc.stop(now + 0.38);
+      }
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      document.getElementById('soundToggleBtn').textContent = soundEnabled ? '🔊' : '🔇';
+      showToast(soundEnabled ? 'Ovoz effektlari yoqildi' : 'Ovoz effektlari o‘chirildi');
+    }
+
+    // =========================================================================
+    // 6. HELPERS, SIZE SWITCHING, CHEF PICKS & NOTE
+    // =========================================================================
+    function formatSom(num) {
+      return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + " so'm";
+    }
+
+    let toastTimer = null;
+    function showToast(msg) {
+      const el = document.getElementById('toastBox');
+      el.textContent = msg;
+      el.classList.remove('opacity-0');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.add('opacity-0'), 2500);
+    }
+
+    function isPointInsideRect(x, y, rect, padding = 18) {
+      return x >= rect.left - padding && x <= rect.right + padding && y >= rect.top - padding && y <= rect.bottom + padding;
+    }
+
+    function setDishSize(sizeId) {
+      if (!SIZE_CONFIGS[sizeId]) return;
+      currentSize = sizeId;
+      playSound('pop');
+
+      document.querySelectorAll('.size-btn').forEach(btn => {
+        const active = btn.dataset.size === sizeId;
+        btn.className = active
+          ? 'size-btn px-2.5 py-1 rounded-lg text-xs font-extrabold transition bg-[#111827] text-[#F4C430] shadow'
+          : 'size-btn px-2.5 py-1 rounded-lg text-xs font-extrabold transition text-[#111827]/75 hover:bg-amber-100';
+      });
+
+      renderAll();
+      showToast(`Porsiya o‘lchami: ${SIZE_CONFIGS[sizeId].label}`);
+    }
+
+    function applyChefPick(pickIndex) {
+      const cfg = DISH_CONFIGS[currentDishId];
+      const pick = cfg.chefPicks[pickIndex];
+      if (!pick) return;
+
+      const st = dishStates[currentDishId];
+      st.isBoxClosed = false;
+      st.isWrappedOrSliced = false;
+      document.getElementById('takeoutBox').classList.remove('is-closed');
+      document.getElementById('completedBanner').classList.add('hidden');
+      document.getElementById('completedBanner').classList.remove('flex');
+
+      st.baseIndex = pick.baseIndex ?? 0;
+      st.sauces = [...(pick.sauces || [])];
+      st.hasTopBun = false;
+      st.items = [];
+
+      pick.items.forEach((ingId, idx) => {
+        if (currentDishId === 'burger' && ingId === 'topbun') {
+          st.hasTopBun = true;
+          return;
+        }
+        // Distribute nicely on pizza/lavash/hotdog
+        const angle = (idx * 2.1) % (Math.PI * 2);
+        const radius = ingId === 'pizza_cheese' ? 0 : 16 + (idx % 3) * 5;
+        const x = Math.max(28, Math.min(72, 50 + Math.cos(angle) * radius));
+        const y = Math.max(28, Math.min(72, 50 + Math.sin(angle) * radius));
+        st.items.push({ uid: nextUid++, type: ingId, x, y });
+      });
+
+      playSound('pop');
+      renderAll();
+      showToast(`Chef tavsiyasi "${pick.name}" terildi!`);
+    }
+
+    function selectBaseIndex(idx) {
+      const st = dishStates[currentDishId];
+      if (st.isBoxClosed || st.isWrappedOrSliced) reopenDish();
+      st.baseIndex = idx;
+      playSound('pop');
+      renderAll();
+    }
+
+    function updateChefNote(val) {
+      chefNote = val.trim();
+      renderChipsAndReceipt();
+    }
+
+    function switchDish(dishId) {
+      if (!DISH_CONFIGS[dishId]) return;
+      currentDishId = dishId;
+      playSound('pop');
+
+      document.querySelectorAll('.dish-tab').forEach(btn => {
+        const isSelected = btn.dataset.dish === dishId;
+        btn.className = isSelected
+          ? 'dish-tab px-3 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition flex items-center gap-1.5 bg-[#1d4ed8] text-white shadow'
+          : 'dish-tab px-3 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition flex items-center gap-1.5 text-[#111827]/80 hover:text-[#111827] hover:bg-white/60';
+      });
+
+      const cfg = DISH_CONFIGS[dishId];
+      const st = dishStates[dishId];
+
+      const boxEl = document.getElementById('takeoutBox');
+      boxEl.className = `takeout-box ${cfg.boxTheme} w-full h-[360px] sm:h-[390px] p-3.5 sm:p-4 ${st.isBoxClosed ? 'is-closed' : ''}`;
+      document.getElementById('boxFlapTitle').textContent = cfg.flapText;
+      document.getElementById('closedLidDishName').textContent = cfg.closedLidText;
+      document.getElementById('leftPanelSubtitle').textContent = cfg.subtitle;
+      document.getElementById('receiptDishSubtitle').textContent = `${cfg.title.toUpperCase()} LAB • TOSHKENT`;
+
+      const banner = document.getElementById('completedBanner');
+      if (st.isBoxClosed) {
+        banner.classList.remove('hidden');
+        banner.classList.add('flex');
+      } else {
+        banner.classList.add('hidden');
+        banner.classList.remove('flex');
+      }
+
+      renderAll();
+    }
+
+    // =========================================================================
+    // 7. POINTER DRAG-AND-DROP ENGINE (MOUSE + TOUCH)
+    // =========================================================================
+    function startDragIngredient(e, ingId) {
+      if (e.button !== undefined && e.button !== 0) return;
+      const cfg = DISH_CONFIGS[currentDishId];
+      const def = cfg.ingredients.find(i => i.id === ingId);
+      if (!def) return;
+
+      const base = cfg.bases[dishStates[currentDishId].baseIndex];
+      dragSession = {
+        active: true,
+        kind: 'ingredient',
+        id: ingId,
+        startX: e.clientX,
+        startY: e.clientY,
+        moved: false
+      };
+
+      const ghost = document.getElementById('dragGhost');
+      ghost.innerHTML = def.renderDish(base);
+      ghost.style.left = `${e.clientX}px`;
+      ghost.style.top = `${e.clientY}px`;
+      ghost.classList.remove('hidden');
+    }
+
+    function startDragSide(e, sideId) {
+      if (e.button !== undefined && e.button !== 0) return;
+      const def = SIDES_CATALOG.find(s => s.id === sideId);
+      if (!def) return;
+
+      dragSession = {
+        active: true,
+        kind: 'side',
+        id: sideId,
+        startX: e.clientX,
+        startY: e.clientY,
+        moved: false
+      };
+
+      const ghost = document.getElementById('dragGhost');
+      ghost.innerHTML = `<div class="scale-125">${def.svg}</div>`;
+      ghost.style.left = `${e.clientX}px`;
+      ghost.style.top = `${e.clientY}px`;
+      ghost.classList.remove('hidden');
+    }
+
+    function startDragExistingItem(e, uid, ingType) {
+      e.stopPropagation();
+      if (e.button !== undefined && e.button !== 0) return;
+      const cfg = DISH_CONFIGS[currentDishId];
+      const def = cfg.ingredients.find(i => i.id === ingType);
+      if (!def) return;
+
+      const base = cfg.bases[dishStates[currentDishId].baseIndex];
+      dragSession = {
+        active: true,
+        kind: 'existing-item',
+        uid: uid,
+        id: ingType,
+        startX: e.clientX,
+        startY: e.clientY,
+        moved: false
+      };
+
+      const ghost = document.getElementById('dragGhost');
+      ghost.innerHTML = def.renderDish(base);
+      ghost.style.left = `${e.clientX}px`;
+      ghost.style.top = `${e.clientY}px`;
+      ghost.classList.remove('hidden');
+
+      const trash = document.getElementById('trashDropZone');
+      trash.classList.remove('opacity-0', 'scale-90');
+      trash.classList.add('opacity-100', 'scale-100');
+    }
+
+    function startDragBottle(e, sauceId) {
+      if (e.button !== undefined && e.button !== 0) return;
+      const bottleEl = document.getElementById(`bottle-${sauceId}`);
+      if (!bottleEl) return;
+
+      dragSession = {
+        active: true,
+        kind: 'bottle',
+        id: sauceId,
+        startX: e.clientX,
+        startY: e.clientY,
+        moved: false,
+        bottleEl: bottleEl,
+        hasPouredThisDrag: false
+      };
+
+      bottleEl.classList.add('is-dragging-bottle');
+      bottleEl.style.left = `${e.clientX - 28}px`;
+      bottleEl.style.top = `${e.clientY - 45}px`;
+    }
+
+    window.addEventListener('pointermove', (e) => {
+      if (!dragSession.active) return;
+
+      if (Math.hypot(e.clientX - dragSession.startX, e.clientY - dragSession.startY) > 6) {
+        dragSession.moved = true;
+      }
+
+      const dishZone = document.getElementById('dishDropZone');
+      const sidesZone = document.getElementById('sidesDropZone');
+      const dishRect = dishZone.getBoundingClientRect();
+      const sidesRect = sidesZone.getBoundingClientRect();
+
+      if (dragSession.kind === 'ingredient' || dragSession.kind === 'existing-item') {
+        const ghost = document.getElementById('dragGhost');
+        ghost.style.left = `${e.clientX}px`;
+        ghost.style.top = `${e.clientY}px`;
+        dishZone.classList.toggle('drag-over', isPointInsideRect(e.clientX, e.clientY, dishRect, 20));
+      } else if (dragSession.kind === 'side') {
+        const ghost = document.getElementById('dragGhost');
+        ghost.style.left = `${e.clientX}px`;
+        ghost.style.top = `${e.clientY}px`;
+        sidesZone.classList.toggle('drag-over-side', isPointInsideRect(e.clientX, e.clientY, sidesRect, 20));
+      } else if (dragSession.kind === 'bottle') {
+        const bottle = dragSession.bottleEl;
+        const overDish = isPointInsideRect(e.clientX, e.clientY, dishRect, 28);
+
+        bottle.style.left = `${e.clientX - 28}px`;
+        bottle.style.top = `${e.clientY - 45}px`;
+
+        if (overDish) {
+          bottle.style.transform = 'rotate(140deg) scale(1.08)';
+          dishZone.classList.add('drag-over');
+          triggerLiveSaucePour(dragSession.id, e.clientX, e.clientY, dishRect);
+        } else {
+          bottle.style.transform = 'rotate(15deg) scale(1.04)';
+          dishZone.classList.remove('drag-over');
+          hideLiveSauceStream();
+        }
+      }
+    });
+
+    window.addEventListener('pointerup', (e) => {
+      if (!dragSession.active) return;
+
+      const dishZone = document.getElementById('dishDropZone');
+      const sidesZone = document.getElementById('sidesDropZone');
+      const dishRect = dishZone.getBoundingClientRect();
+      const sidesRect = sidesZone.getBoundingClientRect();
+
+      dishZone.classList.remove('drag-over');
+      sidesZone.classList.remove('drag-over-side');
+      document.getElementById('dragGhost').classList.add('hidden');
+      hideLiveSauceStream();
+
+      const trash = document.getElementById('trashDropZone');
+      trash.classList.add('opacity-0', 'scale-90');
+      trash.classList.remove('opacity-100', 'scale-100');
+
+      if (dragSession.kind === 'ingredient') {
+        const droppedOnDish = isPointInsideRect(e.clientX, e.clientY, dishRect, 25);
+        if (droppedOnDish || !dragSession.moved) {
+          let relX = 50, relY = 50;
+          if (droppedOnDish) {
+            relX = Math.max(25, Math.min(75, ((e.clientX - dishRect.left) / dishRect.width) * 100));
+            relY = Math.max(24, Math.min(76, ((e.clientY - dishRect.top) / dishRect.height) * 100));
+          } else {
+            relX = 35 + Math.random() * 30;
+            relY = 35 + Math.random() * 30;
+          }
+          addDishIngredient(dragSession.id, relX, relY);
+        }
+      } else if (dragSession.kind === 'side') {
+        const droppedOnSides = isPointInsideRect(e.clientX, e.clientY, sidesRect, 25);
+        if (droppedOnSides || !dragSession.moved) {
+          addSideItem(dragSession.id);
+        }
+      } else if (dragSession.kind === 'existing-item') {
+        const stillInside = isPointInsideRect(e.clientX, e.clientY, dishRect, 15);
+        if (!stillInside && dragSession.moved) {
+          removeDishItemByUid(dragSession.uid);
+          showToast('Masalliq olib tashlandi');
+        } else if (stillInside && dragSession.moved && (currentDishId === 'pizza' || currentDishId === 'lavash')) {
+          const st = dishStates[currentDishId];
+          const item = st.items.find(i => i.uid === dragSession.uid);
+          if (item) {
+            item.x = Math.max(25, Math.min(75, ((e.clientX - dishRect.left) / dishRect.width) * 100));
+            item.y = Math.max(24, Math.min(76, ((e.clientY - dishRect.top) / dishRect.height) * 100));
+            renderAll();
+          }
+        }
+      } else if (dragSession.kind === 'bottle') {
+        const bottle = dragSession.bottleEl;
+        bottle.classList.remove('is-dragging-bottle');
+        bottle.style.left = '';
+        bottle.style.top = '';
+        bottle.style.transform = '';
+
+        if (!dragSession.moved && !dragSession.hasPouredThisDrag) {
+          quickClickPourSauce(dragSession.id);
+        }
+      }
+
+      dragSession.active = false;
+      dragSession.kind = null;
+    });
+
+    let lastPourSoundTime = 0;
+    function triggerLiveSaucePour(sauceId, clientX, clientY, dishRect) {
+      const cfg = DISH_CONFIGS[currentDishId];
+      const sauceInfo = cfg.sauces.find(s => s.id === sauceId);
+      if (!sauceInfo) return;
+
+      const svgEl = document.getElementById('livePourStreamSvg');
+      const pathEl = document.getElementById('livePourPath');
+      const d1 = document.getElementById('pourDrop1');
+      const d2 = document.getElementById('pourDrop2');
+      const d3 = document.getElementById('pourDrop3');
+
+      const relX = Math.max(45, Math.min(235, ((clientX - dishRect.left) / dishRect.width) * 280 - 18));
+      const relY = Math.max(25, Math.min(180, ((clientY - dishRect.top) / dishRect.height) * 320 + 25));
+
+      pathEl.setAttribute('stroke', sauceInfo.bodyColor);
+      pathEl.setAttribute('d', `M ${relX} ${relY} Q ${relX + 6} ${relY + 45} ${relX - 4} ${relY + 95}`);
+      [d1, d2, d3].forEach(d => d.setAttribute('fill', sauceInfo.bodyColor));
+      d1.setAttribute('cx', relX - 4); d1.setAttribute('cy', relY + 40);
+      d2.setAttribute('cx', relX + 6); d2.setAttribute('cy', relY + 55);
+      d3.setAttribute('cx', relX - 8); d3.setAttribute('cy', relY + 68);
+      svgEl.classList.remove('hidden');
+
+      const now = Date.now();
+      if (now - lastPourSoundTime > 260) {
+        playSound('squish');
+        lastPourSoundTime = now;
+      }
+
+      if (!dragSession.hasPouredThisDrag) {
+        dragSession.hasPouredThisDrag = true;
+        const st = dishStates[currentDishId];
+        if (st.isBoxClosed || st.isWrappedOrSliced) reopenDish();
+        st.sauces.push(sauceId);
+        renderAll();
+      }
+    }
+
+    function hideLiveSauceStream() {
+      document.getElementById('livePourStreamSvg').classList.add('hidden');
+    }
+
+    function quickClickPourSauce(sauceId) {
+      const st = dishStates[currentDishId];
+      if (st.isBoxClosed || st.isWrappedOrSliced) reopenDish();
+      const bottle = document.getElementById(`bottle-${sauceId}`);
+      bottle.style.transform = 'translateY(34px) rotate(140deg) scale(1.08)';
+      playSound('squish');
+
+      setTimeout(() => {
+        st.sauces.push(sauceId);
+        renderAll();
+      }, 220);
+
+      setTimeout(() => {
+        bottle.style.transform = '';
+      }, 560);
+    }
+
+    // =========================================================================
+    // 8. STATE MUTATIONS
+    // =========================================================================
+    function addDishIngredient(ingId, x = 50, y = 50) {
+      const cfg = DISH_CONFIGS[currentDishId];
+      const st = dishStates[currentDishId];
+      if (st.isBoxClosed || st.isWrappedOrSliced) reopenDish();
+
+      const def = cfg.ingredients.find(i => i.id === ingId);
+      if (!def) return;
+
+      if (currentDishId === 'burger' && def.isTopBun) {
+        if (st.hasTopBun) {
+          showToast('Ustki bulochka allaqachon qo‘yilgan!');
+          return;
+        }
+        st.hasTopBun = true;
+        playSound('pop');
+        renderAll();
+        return;
+      }
+
+      if (currentDishId === 'burger' && st.hasTopBun) {
+        st.hasTopBun = false;
+      }
+
+      if (st.items.length >= 18) {
+        showToast('Maksimal 18 ta masalliq qo‘shish mumkin!');
+        return;
+      }
+
+      st.items.push({ uid: nextUid++, type: ingId, x, y });
+      playSound('pop');
+      renderAll();
+    }
+
+    function removeDishItemByUid(uid) {
+      const st = dishStates[currentDishId];
+      if (st.isBoxClosed || st.isWrappedOrSliced) reopenDish();
+      st.items = st.items.filter(i => i.uid !== uid);
+      playSound('remove');
+      renderAll();
+    }
+
+    function removeTopBun() {
+      const st = dishStates[currentDishId];
+      if (st.isBoxClosed) reopenDish();
+      st.hasTopBun = false;
+      playSound('remove');
+      renderAll();
+    }
+
+    function removeSauceIndex(idx) {
+      const st = dishStates[currentDishId];
+      if (st.isBoxClosed || st.isWrappedOrSliced) reopenDish();
+      st.sauces.splice(idx, 1);
+      playSound('remove');
+      renderAll();
+    }
+
+    function addSideItem(sideId) {
+      const st = dishStates[currentDishId];
+      if (st.isBoxClosed) reopenDish();
+      if (st.sides.length >= 5) {
+        showToast('Quti yon bo‘limiga maksimal 5 ta qo‘shimcha sig‘adi!');
+        return;
+      }
+      st.sides.push(sideId);
+      playSound('pop');
+      renderAll();
+    }
+
+    function removeSideIndex(idx) {
+      const st = dishStates[currentDishId];
+      if (st.isBoxClosed) reopenDish();
+      st.sides.splice(idx, 1);
+      playSound('remove');
+      renderAll();
+    }
+
+    function undoLastItem() {
+      const st = dishStates[currentDishId];
+      if (st.isBoxClosed || st.isWrappedOrSliced) {
+        reopenDish();
+        return;
+      }
+      if (currentDishId === 'burger' && st.hasTopBun) {
+        st.hasTopBun = false;
+      } else if (st.sauces.length > 0 && st.items.length === 0) {
+        st.sauces.pop();
+      } else if (st.items.length > 0) {
+        st.items.pop();
+      } else {
+        showToast('Olib tashlash uchun masalliq qolmadi');
+        return;
+      }
+      playSound('remove');
+      renderAll();
+    }
+
+    function reopenDish() {
+      const st = dishStates[currentDishId];
+      st.isBoxClosed = false;
+      st.isWrappedOrSliced = false;
+      document.getElementById('takeoutBox').classList.remove('is-closed');
+      document.getElementById('completedBanner').classList.add('hidden');
+      document.getElementById('completedBanner').classList.remove('flex');
+      renderAll();
+    }
+
+    function resetCurrentDish() {
+      const st = dishStates[currentDishId];
+      st.items = [];
+      st.sauces = [];
+      st.sides = [];
+      st.hasTopBun = false;
+      st.isWrappedOrSliced = false;
+      st.isBoxClosed = false;
+      document.getElementById('takeoutBox').classList.remove('is-closed');
+      document.getElementById('completedBanner').classList.add('hidden');
+      document.getElementById('completedBanner').classList.remove('flex');
+      playSound('remove');
+      renderAll();
+      showToast('Quti tozalandi. Masalliqlarni sudrab yangi taom tayyorlang!');
+    }
+
+    // =========================================================================
+    // 9. RENDER CHEF PICKS, BASES, SAUCES, INGREDIENTS & SIDES
+    // =========================================================================
+    function renderChefPicksAndBases() {
+      const cfg = DISH_CONFIGS[currentDishId];
+      const st = dishStates[currentDishId];
+      const sizeCfg = SIZE_CONFIGS[currentSize];
+
+      // Chef Picks Bar
+      const picksContainer = document.getElementById('chefPicksContainer');
+      picksContainer.innerHTML = cfg.chefPicks.map((pick, idx) => {
+        const pickBase = cfg.bases[pick.baseIndex ?? 0];
+        let approxPrice = cfg.basePrice + (pick.sauces || []).reduce((acc, sId) => {
+          const s = cfg.sauces.find(x => x.id === sId);
+          return acc + (s ? s.price : 0);
+        }, 0);
+        approxPrice += (pick.items || []).reduce((acc, ingId) => {
+          const def = cfg.ingredients.find(x => x.id === ingId);
+          return acc + (def ? def.price : 0);
+        }, 0);
+        approxPrice = Math.round(approxPrice * sizeCfg.priceMult);
+
+        return `
+          <button onclick="applyChefPick(${idx})" class="chef-pick-card px-3 py-2 text-left flex items-center justify-between gap-2">
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="text-[10px] font-extrabold bg-[#111827] text-[#F4C430] px-1.5 py-0.5 rounded">${pick.badge}</span>
+                <span class="font-extrabold text-xs text-[#111827] truncate">${pick.name}</span>
+              </div>
+              <div class="text-[10px] text-zinc-600 truncate mt-0.5">${pickBase.name} • ${pick.items.length} masalliq</div>
+            </div>
+            <span class="font-mono-receipt text-[11px] font-bold text-[#1d4ed8] whitespace-nowrap">${formatSom(approxPrice)}</span>
+          </button>
+        `;
+      }).join('');
+
+      // Base / Bread / Dough Selector Pills
+      const baseBar = document.getElementById('baseSelectorBar');
+      baseBar.innerHTML = cfg.bases.map((b, idx) => {
+        const active = idx === st.baseIndex;
+        return `
+          <button onclick="selectBaseIndex(${idx})" class="px-3 py-1.5 rounded-xl text-xs font-extrabold border-2 transition flex items-center gap-1.5 ${
+            active
+              ? 'bg-[#111827] text-[#F4C430] border-[#111827] shadow-sm'
+              : 'bg-[#FFFDF7] text-[#111827]/80 border-[#111827]/15 hover:border-[#1d4ed8]'
+          }">
+            <span>${b.icon}</span>
+            <span>${b.name}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function renderCatalogsAndSauces() {
+      renderChefPicksAndBases();
+
+      const cfg = DISH_CONFIGS[currentDishId];
+      const st = dishStates[currentDishId];
+      const sizeCfg = SIZE_CONFIGS[currentSize];
+      const activeBase = cfg.bases[st.baseIndex];
+
+      // Sauce Bottles Shelf
+      const shelf = document.getElementById('sauceBottlesShelf');
+      shelf.innerHTML = cfg.sauces.map((s) => `
+        <div class="sauce-bottle-slot">
+          <div id="bottle-${s.id}" data-sauce="${s.id}" class="sauce-bottle flex flex-col items-center group" title="Ushlab taom ustiga olib boring">
+            <span class="opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-extrabold bg-[#111827] text-[#F4C430] px-1.5 py-0.5 rounded-full mb-0.5 shadow whitespace-nowrap">${s.name}</span>
+            <svg width="52" height="94" viewBox="0 0 64 120" fill="none">
+              <path d="M28 4L36 4L39 22H25L28 4Z" fill="${s.bodyColor}" stroke="${s.stroke}" stroke-width="2.5" stroke-linejoin="round"/>
+              <rect x="20" y="21" width="24" height="10" rx="3" fill="${s.capColor}" stroke="${s.stroke}" stroke-width="2.5"/>
+              <rect x="13" y="31" width="38" height="82" rx="14" fill="${s.bodyColor}" stroke="${s.stroke}" stroke-width="2.5"/>
+              <rect x="15" y="54" width="34" height="34" rx="4" fill="${s.capColor}"/>
+              <text x="32" y="69" text-anchor="middle" fill="${s.textColor}" font-family="Oswald" font-weight="700" font-size="8.5">${s.label1}</text>
+              <text x="32" y="80" text-anchor="middle" fill="#FFFFFF" font-family="Oswald" font-weight="700" font-size="8">${s.label2}</text>
+            </svg>
+          </div>
+        </div>
+      `).join('');
+
+      cfg.sauces.forEach(s => {
+        const el = document.getElementById(`bottle-${s.id}`);
+        if (el) el.addEventListener('pointerdown', (e) => startDragBottle(e, s.id));
+      });
+
+      // Left Panel Ingredients
+      const ingGrid = document.getElementById('ingredientsGrid');
+      ingGrid.innerHTML = cfg.ingredients.map(item => {
+        const adjPrice = Math.round(item.price * sizeCfg.priceMult);
+        return `
+          <div onpointerdown="startDragIngredient(event, '${item.id}')" class="food-tray p-2.5 flex flex-col justify-between group relative overflow-hidden">
+            <div class="flex items-center justify-between w-full mb-1">
+              <div class="bg-amber-100/90 rounded-xl p-1 flex items-center justify-center group-hover:scale-110 transition-transform pointer-events-none">
+                ${item.svgIcon}
+              </div>
+              <span class="text-[10px] font-extrabold text-[#1d4ed8] bg-blue-100/90 px-2 py-0.5 rounded-full pointer-events-none">Sudrang ✥</span>
+            </div>
+            <div class="pointer-events-none">
+              <div class="font-extrabold text-xs text-[#111827] leading-tight">${item.name}</div>
+              <div class="text-[10px] text-zinc-500 truncate mt-0.5">${item.sub}</div>
+              <div class="font-mono-receipt font-bold text-xs text-[#1d4ed8] mt-1">${item.price === 0 ? 'Bepul (Yopish)' : formatSom(adjPrice)}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Right Panel Expanded Sides
+      const sidesGrid = document.getElementById('sidesGrid');
+      sidesGrid.innerHTML = SIDES_CATALOG.map(side => {
+        const count = st.sides.filter(s => s === side.id).length;
+        return `
+          <div onpointerdown="startDragSide(event, '${side.id}')" class="food-tray p-2 text-center flex flex-col items-center justify-between relative ${count > 0 ? 'ring-2 ring-[#1d4ed8]' : ''}">
+            ${count > 0 ? `<span class="absolute top-1 right-1 bg-[#1d4ed8] text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded-full pointer-events-none">x${count}</span>` : ''}
+            <div class="my-0.5 pointer-events-none">${side.svg}</div>
+            <div class="w-full pointer-events-none">
+              <div class="font-extrabold text-[11px] text-[#111827] leading-tight truncate">${side.name}</div>
+              <div class="font-mono-receipt font-bold text-[10px] text-[#1d4ed8] mt-0.5">${formatSom(side.price)}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // =========================================================================
+    // 10. RENDER DISH-SPECIFIC 2.5D STAGES & SIDES COMPARTMENT
+    // =========================================================================
+    function renderDishStage() {
+      const container = document.getElementById('dishStageContainer');
+      const cfg = DISH_CONFIGS[currentDishId];
+      const st = dishStates[currentDishId];
+      const base = cfg.bases[st.baseIndex];
+
+      // A. BURGER STAGE
+      if (currentDishId === 'burger') {
+        let currentBottom = 14;
+        let html = `<div class="w-44 h-11 bg-[#111827]/15 rounded-[100%] blur-[2px] absolute bottom-2 pointer-events-none"></div>`;
+
+        html += `
+          <div class="burger-layer-item pointer-events-none" style="bottom: ${currentBottom}px; z-index: 1;">
+            <svg viewBox="0 0 200 52" class="w-[180px] h-[46px] drop-shadow-md">
+              <path d="M16 18 H184 L176 38 C172 46, 28 46, 24 38 Z" fill="${base.bottomColor}"/>
+              <ellipse cx="100" cy="18" rx="84" ry="14" fill="#FDE68A" opacity="0.55"/>
+            </svg>
+          </div>
+        `;
+        currentBottom += 18;
+
+        st.items.forEach((item, index) => {
+          const def = cfg.ingredients.find(i => i.id === item.type);
+          if (!def) return;
+          html += `
+            <div onpointerdown="startDragExistingItem(event, ${item.uid}, '${item.type}')" class="burger-layer-item" style="bottom: ${currentBottom}px; z-index: ${index + 2};" title="Olib tashlash uchun tashqariga sudrang">
+              ${def.renderDish(base)}
+            </div>
+          `;
+          currentBottom += Math.max(7, def.height - (st.items.length > 9 ? 2 : 0));
+        });
+
+        if (st.sauces.length > 0) {
+          const saucePaths = st.sauces.map((sId, idx) => {
+            const s = cfg.sauces.find(x => x.id === sId);
+            const offsetY = (idx % 3) * 3;
+            return `<path d="M42 ${18 + offsetY} Q62 ${6 + offsetY} 80 ${18 + offsetY} T118 ${18 + offsetY} T158 ${18 + offsetY}" fill="none" stroke="${s.bodyColor}" stroke-width="7" stroke-linecap="round"/>`;
+          }).join('');
+          html += `
+            <div class="burger-layer-item pointer-events-none" style="bottom: ${currentBottom - 6}px; z-index: ${st.items.length + 5};">
+              <svg viewBox="0 0 200 36" class="w-[170px] h-[32px]">${saucePaths}</svg>
+            </div>
+          `;
+          currentBottom += 6;
+        }
+
+        if (st.hasTopBun) {
+          const topDef = cfg.ingredients.find(i => i.id === 'topbun');
+          html += `
+            <div onclick="removeTopBun()" class="burger-layer-item" style="bottom: ${currentBottom - 4}px; z-index: ${st.items.length + 10};" title="Ustki bulochkani olib tashlash">
+              ${topDef.renderDish(base)}
+            </div>
+          `;
+        }
+
+        container.innerHTML = html;
+        document.getElementById('itemCountPill').textContent = `${st.items.length + 1 + (st.hasTopBun ? 1 : 0)} qavat • ${currentSize}`;
+      }
+
+      // B. LAVASH STAGE
+      else if (currentDishId === 'lavash') {
+        if (st.isWrappedOrSliced) {
+          container.innerHTML = `
+            <div class="flex flex-col items-center justify-center animate-[sidePopIn_0.45s_ease-out]">
+              <svg viewBox="0 0 260 130" class="w-[240px] h-[120px] drop-shadow-xl">
+                <rect x="20" y="34" width="220" height="62" rx="31" fill="${base.fill}" stroke="${base.border}" stroke-width="4"/>
+                <path d="M55 38 L72 92 M95 38 L112 92 M135 38 L152 92 M175 38 L192 92" stroke="#9A5B13" stroke-width="5" stroke-linecap="round" opacity="0.55"/>
+                <rect x="115" y="31" width="95" height="68" rx="6" fill="#1d4ed8" stroke="#111827" stroke-width="3"/>
+                <text x="162" y="62" text-anchor="middle" fill="#F4C430" font-family="Oswald" font-weight="700" font-size="14">DOUBLE GOOD</text>
+                <text x="162" y="78" text-anchor="middle" fill="#FFFFFF" font-family="Oswald" font-weight="700" font-size="10">HOT LAVASH</text>
+              </svg>
+            </div>
+          `;
+          document.getElementById('itemCountPill').textContent = `O‘ralgan lavash • ${currentSize}`;
+          return;
+        }
+
+        let html = `
+          <svg viewBox="0 0 260 220" class="w-[240px] h-[205px] drop-shadow-md pointer-events-none">
+            <rect x="14" y="16" width="232" height="188" rx="46" fill="${base.fill}" stroke="${base.border}" stroke-width="4"/>
+            <ellipse cx="130" cy="110" rx="88" ry="66" fill="none" stroke="${base.border}" stroke-width="2" stroke-dasharray="6 6" opacity="0.5"/>
+          </svg>
+        `;
+
+        st.items.forEach((item, idx) => {
+          const def = cfg.ingredients.find(i => i.id === item.type);
+          if (!def) return;
+          html += `
+            <div onpointerdown="startDragExistingItem(event, ${item.uid}, '${item.type}')" class="scattered-item" style="left: ${item.x}%; top: ${item.y}%; transform: translate(-50%, -50%); z-index: ${idx + 5};" title="Joyini o‘zgartiring yoki tashqariga sudrab o‘chiring">
+              ${def.renderDish(base)}
+            </div>
+          `;
+        });
+
+        if (st.sauces.length > 0) {
+          const paths = st.sauces.map((sId, idx) => {
+            const s = cfg.sauces.find(x => x.id === sId);
+            const shift = idx * 8;
+            return `<path d="M55 ${75 + shift} L195 ${92 + shift} L65 ${115 + shift} L190 ${132 + shift}" fill="none" stroke="${s.bodyColor}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>`;
+          }).join('');
+          html += `<svg viewBox="0 0 260 220" class="absolute inset-0 w-full h-full pointer-events-none z-30">${paths}</svg>`;
+        }
+
+        container.innerHTML = html;
+        document.getElementById('itemCountPill').textContent = `${st.items.length} ta masalliq • ${currentSize}`;
+      }
+
+      // C. PIZZA STAGE
+      else if (currentDishId === 'pizza') {
+        const hasTomatoSauce = st.sauces.includes('marinara');
+        const hasWhiteSauce = st.sauces.includes('alfredo');
+        const hasBbqSauce = st.sauces.includes('bbq_pizza');
+
+        let sauceFill = 'transparent';
+        if (hasBbqSauce) sauceFill = '#78350F';
+        else if (hasWhiteSauce) sauceFill = '#FEF9C3';
+        else if (hasTomatoSauce) sauceFill = '#ef4444';
+
+        let html = `
+          <svg viewBox="0 0 250 250" class="w-[235px] h-[235px] drop-shadow-lg pointer-events-none">
+            <circle cx="125" cy="125" r="112" fill="${base.crustColor}" stroke="#92400E" stroke-width="4"/>
+            ${base.cheeseRim ? `<circle cx="125" cy="125" r="103" fill="none" stroke="#FACC15" stroke-width="7" stroke-dasharray="14 6"/>` : ''}
+            <circle cx="125" cy="125" r="95" fill="#FDE68A"/>
+            ${sauceFill !== 'transparent' ? `<circle cx="125" cy="125" r="91" fill="${sauceFill}" opacity="0.92"/>` : ''}
+          </svg>
+        `;
+
+        st.items.forEach((item, idx) => {
+          const def = cfg.ingredients.find(i => i.id === item.type);
+          if (!def) return;
+          const isCheese = item.type === 'pizza_cheese';
+          html += `
+            <div onpointerdown="startDragExistingItem(event, ${item.uid}, '${item.type}')" class="scattered-item" style="left: ${isCheese ? 50 : item.x}%; top: ${isCheese ? 50 : item.y}%; transform: translate(-50%, -50%) ${isCheese ? 'scale(2.5)' : ''}; z-index: ${isCheese ? 2 : idx + 6};" title="Joyini o‘zgartiring yoki tashqariga sudrab o‘chiring">
+              ${def.renderDish(base)}
+            </div>
+          `;
+        });
+
+        if (st.sauces.length > 0) {
+          const lastSauce = cfg.sauces.find(s => s.id === st.sauces[st.sauces.length - 1]);
+          html += `
+            <svg viewBox="0 0 250 250" class="absolute inset-0 w-full h-full pointer-events-none z-20">
+              <path d="M125 125 m-55 0 a 55 55 0 1 0 110 0 a 40 40 0 1 0 -80 0 a 22 22 0 1 0 44 0" fill="none" stroke="${lastSauce.bodyColor}" stroke-width="5" stroke-linecap="round" opacity="0.8"/>
+            </svg>
+          `;
+        }
+
+        if (st.isWrappedOrSliced) {
+          html += `
+            <svg viewBox="0 0 250 250" class="absolute inset-0 w-full h-full pointer-events-none z-40">
+              <line x1="125" y1="15" x2="125" y2="235" stroke="#111827" stroke-width="3.5" class="pizza-slice-line"/>
+              <line x1="15" y1="125" x2="235" y2="125" stroke="#111827" stroke-width="3.5" class="pizza-slice-line"/>
+              <line x1="47" y1="47" x2="203" y2="203" stroke="#111827" stroke-width="3.5" class="pizza-slice-line"/>
+              <line x1="203" y1="47" x2="47" y2="203" stroke="#111827" stroke-width="3.5" class="pizza-slice-line"/>
+            </svg>
+          `;
+        }
+
+        container.innerHTML = html;
+        document.getElementById('itemCountPill').textContent = `${st.items.length} ta masalliq • ${currentSize}`;
+      }
+
+      // D. HOT-DOG STAGE
+      else if (currentDishId === 'hotdog') {
+        let html = `
+          <svg viewBox="0 0 260 150" class="w-[245px] h-[140px] drop-shadow-lg pointer-events-none">
+            <rect x="12" y="24" width="236" height="44" rx="22" fill="${base.bunColor}" stroke="#9A5B13" stroke-width="3"/>
+            <rect x="20" y="54" width="220" height="36" rx="14" fill="#FDE68A"/>
+            <rect x="12" y="78" width="236" height="44" rx="22" fill="${base.bunColor}" stroke="#9A5B13" stroke-width="3"/>
+          </svg>
+        `;
+
+        const sausages = st.items.filter(i => i.type.includes('sausage'));
+        const toppings = st.items.filter(i => !i.type.includes('sausage'));
+
+        sausages.forEach((sItem, idx) => {
+          const def = cfg.ingredients.find(i => i.id === sItem.type);
+          html += `
+            <div onpointerdown="startDragExistingItem(event, ${sItem.uid}, '${sItem.type}')" class="scattered-item" style="left: 50%; top: ${48 + idx * 6}%; transform: translate(-50%, -50%); z-index: ${idx + 5};" title="Olib tashlash uchun tashqariga sudrang">
+              ${def.renderDish(base)}
+            </div>
+          `;
+        });
+
+        toppings.forEach((tItem, idx) => {
+          const def = cfg.ingredients.find(i => i.id === tItem.type);
+          html += `
+            <div onpointerdown="startDragExistingItem(event, ${tItem.uid}, '${tItem.type}')" class="scattered-item" style="left: 50%; top: ${45 - idx * 3}%; transform: translate(-50%, -50%); z-index: ${idx + 12};" title="Olib tashlash uchun tashqariga sudrang">
+              ${def.renderDish(base)}
+            </div>
+          `;
+        });
+
+        if (st.sauces.length > 0) {
+          const wavePaths = st.sauces.map((sId, idx) => {
+            const s = cfg.sauces.find(x => x.id === sId);
+            const yOff = (idx % 3) * 4;
+            return `<path d="M35 ${72 + yOff} Q50 ${54 + yOff} 65 ${72 + yOff} T95 ${72 + yOff} T125 ${72 + yOff} T155 ${72 + yOff} T185 ${72 + yOff} T220 ${72 + yOff}" fill="none" stroke="${s.bodyColor}" stroke-width="6.5" stroke-linecap="round"/>`;
+          }).join('');
+          html += `<svg viewBox="0 0 260 150" class="absolute inset-0 w-full h-full pointer-events-none z-30">${wavePaths}</svg>`;
+        }
+
+        container.innerHTML = html;
+        document.getElementById('itemCountPill').textContent = `${st.items.length} ta masalliq • ${currentSize}`;
+      }
+    }
+
+    function renderBoxSides() {
+      const container = document.getElementById('boxSidesContainer');
+      const st = dishStates[currentDishId];
+      if (st.sides.length === 0) {
+        container.innerHTML = `
+          <div class="text-center opacity-60 pointer-events-none px-1">
+            <div class="text-2xl mb-1">🍟</div>
+            <div class="text-[10px] font-bold text-[#111827] leading-tight">O‘ngdan qo‘shimcha sudrab tashlang</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = st.sides.map((sideId, idx) => {
+        const side = SIDES_CATALOG.find(s => s.id === sideId);
+        return `
+          <div onclick="removeSideIndex(${idx})" class="side-in-box bg-white/95 hover:bg-red-50 rounded-xl p-1 border border-amber-300 shadow-sm text-center w-full" title="Olib tashlash uchun bosing">
+            ${side.svg}
+            <div class="text-[9px] font-extrabold text-[#111827] truncate">${side.name}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // =========================================================================
+    // 11. RENDER CHIPS, CALORIES/WEIGHT & THERMAL RECEIPT
+    // =========================================================================
+    function renderChipsAndReceipt() {
+      const cfg = DISH_CONFIGS[currentDishId];
+      const st = dishStates[currentDishId];
+      const sizeCfg = SIZE_CONFIGS[currentSize];
+      const base = cfg.bases[st.baseIndex];
+
+      const chipsContainer = document.getElementById('activeLayersChips');
+      const receiptList = document.getElementById('receiptItemsList');
+
+      let dishRawPrice = cfg.basePrice;
+      let dishRawKcal = cfg.baseKcal;
+      let dishRawWeight = cfg.baseWeight;
+
+      let chipsHtml = `
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-200/80 text-[#111827] text-[11px] font-bold">
+          ${base.icon} ${base.name} (${currentSize})
+        </span>
+      `;
+
+      st.items.forEach(item => {
+        const def = cfg.ingredients.find(i => i.id === item.type);
+        if (!def) return;
+        dishRawPrice += def.price;
+        dishRawKcal += def.kcal;
+        dishRawWeight += def.weight;
+        chipsHtml += `
+          <button onclick="removeDishItemByUid(${item.uid})" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-blue-100 hover:bg-red-100 text-[#111827] hover:text-red-700 text-[11px] font-bold transition">
+            <span>${def.name}</span>
+            <span class="text-xs leading-none">×</span>
+          </button>
+        `;
+      });
+
+      st.sauces.forEach((sId, idx) => {
+        const s = cfg.sauces.find(x => x.id === sId);
+        if (!s) return;
+        dishRawPrice += s.price;
+        dishRawKcal += s.kcal;
+        dishRawWeight += s.weight;
+        chipsHtml += `
+          <button onclick="removeSauceIndex(${idx})" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-yellow-100 hover:bg-red-100 text-[#111827] hover:text-red-700 text-[11px] font-bold transition">
+            <span>💧 ${s.name}</span>
+            <span class="text-xs leading-none">×</span>
+          </button>
+        `;
+      });
+
+      if (currentDishId === 'burger' && st.hasTopBun) {
+        dishRawKcal += 140;
+        dishRawWeight += 65;
+        chipsHtml += `
+          <button onclick="removeTopBun()" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-200 hover:bg-red-100 text-[#111827] hover:text-red-700 text-[11px] font-bold transition">
+            <span>🥯 Ustki bulochka</span>
+            <span class="text-xs leading-none">×</span>
+          </button>
+        `;
+      }
+
+      chipsContainer.innerHTML = chipsHtml;
+
+      let totalPrice = Math.round(dishRawPrice * sizeCfg.priceMult);
+      let totalKcal = Math.round(dishRawKcal * sizeCfg.kcalMult);
+      let totalWeight = Math.round(dishRawWeight * sizeCfg.weightMult);
+
+      const aggregated = {};
+      aggregated['base'] = {
+        name: `${cfg.title} • ${currentSize} (${base.name})`,
+        qty: 1,
+        unitPrice: Math.round(cfg.basePrice * sizeCfg.priceMult)
+      };
+
+      st.items.forEach(item => {
+        const def = cfg.ingredients.find(i => i.id === item.type);
+        if (!def) return;
+        if (!aggregated[def.id]) {
+          aggregated[def.id] = {
+            name: def.name,
+            qty: 0,
+            unitPrice: Math.round(def.price * sizeCfg.priceMult)
+          };
+        }
+        aggregated[def.id].qty += 1;
+      });
+
+      st.sauces.forEach(sId => {
+        const s = cfg.sauces.find(x => x.id === sId);
+        if (!s) return;
+        const key = `sauce_${sId}`;
+        if (!aggregated[key]) {
+          aggregated[key] = {
+            name: `Sous: ${s.name}`,
+            qty: 0,
+            unitPrice: Math.round(s.price * sizeCfg.priceMult)
+          };
+        }
+        aggregated[key].qty += 1;
+      });
+
+      st.sides.forEach(sideId => {
+        const side = SIDES_CATALOG.find(s => s.id === sideId);
+        totalPrice += side.price;
+        totalKcal += side.kcal;
+        totalWeight += side.weight;
+        const key = `side_${sideId}`;
+        if (!aggregated[key]) {
+          aggregated[key] = { name: side.name, qty: 0, unitPrice: side.price };
+        }
+        aggregated[key].qty += 1;
+      });
+
+      receiptList.innerHTML = Object.values(aggregated).map(row => `
+        <div class="flex items-center justify-between gap-2 py-0.5 border-b border-dotted border-zinc-200">
+          <div class="truncate flex-1">
+            <span class="font-bold text-[#111827]">${row.qty}x</span> ${row.name}
+          </div>
+          <div class="font-bold text-zinc-700 whitespace-nowrap">${formatSom(row.qty * row.unitPrice)}</div>
+        </div>
+      `).join('');
+
+      const noteBox = document.getElementById('receiptNoteBox');
+      const noteText = document.getElementById('receiptNoteText');
+      if (chefNote) {
+        noteText.textContent = chefNote;
+        noteBox.classList.remove('hidden');
+      } else {
+        noteBox.classList.add('hidden');
+      }
+
+      document.getElementById('receiptTotal').textContent = formatSom(totalPrice);
+      document.getElementById('caloriesBadge').textContent = `~${totalKcal} kkal`;
+      document.getElementById('weightBadge').textContent = `~${totalWeight} g`;
+
+      return { totalPrice, totalKcal, totalWeight };
+    }
+
+    // =========================================================================
+    // 12. CHECKOUT & BOX CLOSING SEQUENCE
+    // =========================================================================
+    function openCheckoutModal() {
+      const cfg = DISH_CONFIGS[currentDishId];
+      const st = dishStates[currentDishId];
+
+      if (st.items.length === 0) {
+        showToast(`Avval ${cfg.title.toLowerCase()} ichiga kamida 1 ta masalliq tashlang!`);
+        return;
+      }
+
+      if (currentDishId === 'burger' && !st.hasTopBun) {
+        st.hasTopBun = true;
+        playSound('pop');
+        renderAll();
+      }
+
+      const metrics = renderChipsAndReceipt();
+      document.getElementById('modalDishEmoji').textContent = cfg.emoji;
+      document.getElementById('modalDishTitle').textContent = `${cfg.title} (${currentSize}) • ${st.items.length} masalliq`;
+      document.getElementById('modalActionDesc').textContent = cfg.modalDesc;
+      document.getElementById('modalMetrics').textContent = `${metrics.totalWeight} g • ${metrics.totalKcal} kkal`;
+      document.getElementById('modalTotalSum').textContent = formatSom(metrics.totalPrice);
+
+      const modalNoteRow = document.getElementById('modalNoteRow');
+      if (chefNote) {
+        document.getElementById('modalNoteText').textContent = chefNote;
+        modalNoteRow.classList.remove('hidden');
+      } else {
+        modalNoteRow.classList.add('hidden');
+      }
+
+      const modal = document.getElementById('checkoutModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeCheckoutModal() {
+      const modal = document.getElementById('checkoutModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function confirmAndCloseBox() {
+      closeCheckoutModal();
+      const st = dishStates[currentDishId];
+      const cfg = DISH_CONFIGS[currentDishId];
+      const metrics = renderChipsAndReceipt();
+
+      const lidNoteEl = document.getElementById('closedLidNote');
+      if (chefNote) {
+        lidNoteEl.textContent = `Izoh: "${chefNote}"`;
+        lidNoteEl.classList.remove('hidden');
+      } else {
+        lidNoteEl.classList.add('hidden');
+      }
+
+      if (currentDishId === 'lavash' || currentDishId === 'pizza') {
+        st.isWrappedOrSliced = true;
+        playSound('pop');
+        renderDishStage();
+      }
+
+      const delayBeforeLid = (currentDishId === 'lavash' || currentDishId === 'pizza') ? 650 : 120;
+      setTimeout(() => {
+        st.isBoxClosed = true;
+        document.getElementById('takeoutBox').classList.add('is-closed');
+        playSound('checkout');
+      }, delayBeforeLid);
+
+      setTimeout(() => {
+        const orderNum = Math.floor(100 + Math.random() * 899);
+        document.getElementById('finalOrderNum').textContent = orderNum;
+        document.getElementById('finalOrderSummaryText').textContent =
+          `${cfg.title} (${currentSize}) • ${metrics.totalWeight} g • ${formatSom(metrics.totalPrice)}`;
+        const banner = document.getElementById('completedBanner');
+        banner.classList.remove('hidden');
+        banner.classList.add('flex');
+      }, delayBeforeLid + 650);
+    }
+
+    // =========================================================================
+    // 13. INITIALIZATION
+    // =========================================================================
+    function renderAll() {
+      renderCatalogsAndSauces();
+      renderDishStage();
+      renderBoxSides();
+      renderChipsAndReceipt();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const now = new Date();
+      document.getElementById('receiptDate').textContent =
+        now.toLocaleDateString('uz-UZ') + ' • ' + now.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' });
+      switchDish('burger');
+    });
+  </script>
+</body>
+</html>
